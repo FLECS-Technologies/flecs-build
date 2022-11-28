@@ -21,6 +21,6 @@ run () {
 DIRNAME=$(dirname $(readlink -f ${0}))
 
 run wget -qO- https://boostorg.jfrog.io/artifactory/main/release/1.80.0/source/boost_1_80_0.tar.gz |\
-    tar -C ${DIRNAME}/../fs/opt -xz boost_1_80_0/boost
+    tar -C ${DIRNAME}/../fs/opt -xz boost_1_80_0/boost boost_1_80_0/LICENSE_1_0.txt
 
-run rm -rf ${DIRNAME}/../fs/opt/boost*/doc
+run ln -snf /opt/boost_1_80_0/ ${DIRNAME}/../fs/opt/boost
