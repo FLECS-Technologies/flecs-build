@@ -86,7 +86,7 @@ if(USER_ARCH AND NOT("${USER_ARCH}" STREQUAL "${ARCH}"))
 endif()
 
 # use ccache, if not disabled
-if(NOT ${NO_CCACHE})
+if(NOT NO_CCACHE)
     execute_process(
         COMMAND ccache -s
         OUTPUT_QUIET
