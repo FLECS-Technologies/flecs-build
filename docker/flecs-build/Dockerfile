@@ -14,7 +14,7 @@ RUN /tmp/install-packages.sh automake bc build-essential ca-certificates \
     libpython3.7-dev libpython3.7-dev:arm64 libpython3.7-dev:armhf libtool \
     libudev-dev libudev-dev:arm64 libudev-dev:armhf libusb-1.0-0-dev \
     libusb-1.0-0-dev:arm64 libusb-1.0-0-dev:armhf lsb-release ninja-build \
-    pkg-config python3-pip python3-pybind11 udev wget
+    pkg-config python3-pip python3-pybind11 sudo udev wget
 
 RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg]\
     https://download.docker.com/linux/debian buster stable" >\
