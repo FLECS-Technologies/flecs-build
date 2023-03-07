@@ -40,9 +40,9 @@ install(
 
 # command for building .deb packages
 add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${PACKAGE}_${VERSION}_${ARCH}.deb
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${PACKAGE}_${PACKAGE_VERSION}_${ARCH}.deb
     DEPENDS ${PACKAGE}_deb-pkg-prepare
-    COMMAND dpkg-deb --root-owner-group -Z gzip --build ${CMAKE_CURRENT_BINARY_DIR}/pkg/debian ${CMAKE_BINARY_DIR}/${PACKAGE}_${VERSION}_${ARCH}.deb
+    COMMAND dpkg-deb --root-owner-group -Z gzip --build ${CMAKE_CURRENT_BINARY_DIR}/pkg/debian ${CMAKE_BINARY_DIR}/${PACKAGE}_${PACKAGE_VERSION}_${ARCH}.deb
 )
 
 if(NOT TARGET ${PACKAGE}_deb-pkg-copy)
@@ -55,7 +55,7 @@ add_custom_target(
     DEPENDS ${PACKAGE}_deb-pkg-copy
     COMMAND sed -i "s/##ARCH##/${ARCH}/g" ${CMAKE_CURRENT_BINARY_DIR}/pkg/debian/DEBIAN/control
     COMMAND sed -i "s/##PACKAGE##/${PACKAGE}/g" ${CMAKE_CURRENT_BINARY_DIR}/pkg/debian/DEBIAN/*
-    COMMAND sed -i "s/##VERSION##/${VERSION}/g" ${CMAKE_CURRENT_BINARY_DIR}/pkg/debian/DEBIAN/*
+    COMMAND sed -i "s/##VERSION##/${PACKAGE_VERSION}/g" ${CMAKE_CURRENT_BINARY_DIR}/pkg/debian/DEBIAN/*
     COMMAND sed -i "s/##DESCRIPTION##/${PACKAGE_DESC}/g" ${CMAKE_CURRENT_BINARY_DIR}/pkg/debian/DEBIAN/*
     COMMAND sed -i "s/##DEPENDS##/${PACKAGES_DEPENDS}/g" ${CMAKE_CURRENT_BINARY_DIR}/pkg/debian/DEBIAN/*
     COMMAND chmod 755 ${CMAKE_CURRENT_BINARY_DIR}/pkg/debian/DEBIAN/p* || true
@@ -65,7 +65,7 @@ add_custom_target(
 # generic package rule, depends on .deb builds
 add_custom_target(
     ${PACKAGE}_package
-    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${PACKAGE}_${VERSION}_${ARCH}.deb
+    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${PACKAGE}_${PACKAGE_VERSION}_${ARCH}.deb
 )
 
 set_property(GLOBAL APPEND PROPERTY PACKAGES ${PACKAGE}_package)

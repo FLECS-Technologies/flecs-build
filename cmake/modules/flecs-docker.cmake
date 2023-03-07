@@ -16,22 +16,18 @@ set(REGISTRY_USER $ENV{REGISTRY_USER})
 set(REGISTRY_AUTH $ENV{REGISTRY_AUTH})
 
 if(NOT DOCKER_TAG)
-    if(NOT NDEBUG)
-        set(DOCKER_TAG ${VERSION}-dev)
-    else()
-        set(DOCKER_TAG ${VERSION})
-    endif()
+    message(FATAL_ERROR "Cannot build Docker image without tagname")
 endif()
 
 add_custom_command(
     OUTPUT ${DOCKER_IMAGE}_buildx
-    COMMAND docker buildx build --load --build-arg MACHINE=${MACHINE} --build-arg ARCH=${ARCH} --build-arg VERSION=${VERSION} --platform ${DOCKER_ARCH} --tag flecs/${DOCKER_IMAGE}:${DOCKER_TAG} ${CMAKE_CURRENT_BINARY_DIR}
+    COMMAND docker buildx build --load --build-arg MACHINE=${MACHINE} --build-arg ARCH=${ARCH} --platform ${DOCKER_ARCH} --tag flecs/${DOCKER_IMAGE}:${DOCKER_TAG} ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 add_custom_command(
     OUTPUT ${DOCKER_IMAGE}_archive
     DEPENDS ${DOCKER_IMAGE}_buildx
-    COMMAND docker save flecs/${DOCKER_IMAGE}:${DOCKER_TAG} --output ${CMAKE_CURRENT_BINARY_DIR}/${DOCKER_IMAGE}_${VERSION}_${ARCH}.tar.gz
+    COMMAND docker save flecs/${DOCKER_IMAGE}:${DOCKER_TAG} --output ${CMAKE_CURRENT_BINARY_DIR}/${DOCKER_IMAGE}_${DOCKER_TAG}_${ARCH}.tar.gz
 )
 
 if(NOT TARGET ${DOCKER_IMAGE}_prepare)
