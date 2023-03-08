@@ -27,7 +27,7 @@ add_custom_command(
 add_custom_command(
     OUTPUT ${DOCKER_IMAGE}_archive
     DEPENDS ${DOCKER_IMAGE}_buildx
-    COMMAND docker save flecs/${DOCKER_IMAGE}:${DOCKER_TAG} --output ${CMAKE_CURRENT_BINARY_DIR}/${DOCKER_IMAGE}_${DOCKER_TAG}_${ARCH}.tar.gz
+    COMMAND docker save flecs/${DOCKER_IMAGE}:${DOCKER_TAG} --output ${CMAKE_CURRENT_BINARY_DIR}/${DOCKER_IMAGE}_${DOCKER_TAG}_${ARCH}.tar
 )
 
 if(NOT TARGET ${DOCKER_IMAGE}_prepare)
