@@ -21,3 +21,5 @@ RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/d
     /etc/apt/sources.list.d/docker.list
 
 RUN /tmp/install-packages.sh docker-ce docker-ce-cli containerd.io
+
+RUN (curl -sSf https://sh.rustup.rs | bash -s -- -y) && /root/.cargo/bin/rustup toolchain uninstall stable-x86_64-unknown-linux-gnu

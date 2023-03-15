@@ -1,4 +1,4 @@
-# Copyright 2021-2022 FLECS Technologies GmbH
+# Copyright 2021-2023 FLECS Technologies GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -33,3 +33,6 @@ SET(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 SET(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
 
 SET(CROSS_COMPILE arm-linux-gnueabihf)
+
+SET(RUSTC_TARGET armv7-unknown-linux-gnueabihf)
+set(ENV{RUSTFLAGS} \"-Clinker=${CMAKE_C_COMPILER}\")
