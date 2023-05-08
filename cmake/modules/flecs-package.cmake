@@ -39,9 +39,9 @@ install(
 
 # command for building .deb packages
 add_custom_command(
-    OUTPUT ${PKGBUILD_DIR}/${PACKAGE}_${PACKAGE_VERSION}_${ARCH}.deb
+    OUTPUT ${CMAKE_INSTALL_PREFIX}/${PACKAGE}_${PACKAGE_VERSION}_${ARCH}.deb
     DEPENDS ${PACKAGE}_deb-pkg-prepare
-    COMMAND dpkg-deb --root-owner-group -Z gzip --build ${PKGBUILD_DIR}/debian ${PKGBUILD_DIR}/${PACKAGE}_${PACKAGE_VERSION}_${ARCH}.deb
+    COMMAND dpkg-deb --root-owner-group -Z gzip --build ${PKGBUILD_DIR}/debian ${CMAKE_INSTALL_PREFIX}/${PACKAGE}_${PACKAGE_VERSION}_${ARCH}.deb
 )
 
 if(NOT TARGET ${PACKAGE}_deb-pkg-copy)
@@ -64,7 +64,7 @@ add_custom_target(
 # generic package rule, depends on .deb builds
 add_custom_target(
     ${PACKAGE}_package
-    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${PACKAGE}_${PACKAGE_VERSION}_${ARCH}.deb
+    DEPENDS ${CMAKE_INSTALL_PREFIX}/${PACKAGE}_${PACKAGE_VERSION}_${ARCH}.deb
 )
 
 set_property(GLOBAL APPEND PROPERTY PACKAGES ${PACKAGE}_package)
