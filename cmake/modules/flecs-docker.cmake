@@ -51,7 +51,10 @@ install(FILES
 )
 
 install(CODE
-    "execute_process(COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target ${DOCKER_IMAGE}_docker)"
+    "execute_process(COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target ${DOCKER_IMAGE}_docker RESULT_VARIABLE res ERROR_VARIABLE err)
+    if (NOT res EQUAL 0)
+        message(FATAL_ERROR \"${err}\")
+    endif()"
 )
 
 set_property(GLOBAL APPEND PROPERTY DOCKER_IMAGES ${DOCKER_IMAGE}_docker)
