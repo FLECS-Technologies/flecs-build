@@ -21,13 +21,13 @@ endif()
 
 add_custom_command(
     OUTPUT ${DOCKER_IMAGE}_buildx
-    COMMAND docker buildx build --load --build-arg MACHINE=${MACHINE} --build-arg ARCH=${ARCH} --platform ${DOCKER_ARCH} --tag flecs/${DOCKER_IMAGE}:${DOCKER_TAG} ${CMAKE_CURRENT_BINARY_DIR}
+    COMMAND docker buildx build --load --build-arg MACHINE=${MACHINE} --build-arg ARCH=${ARCH} --platform ${DOCKER_ARCH} --tag flecs/${DOCKER_IMAGE}:${DOCKER_TAG} ${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}
 )
 
 add_custom_command(
     OUTPUT ${DOCKER_IMAGE}_archive
     DEPENDS ${DOCKER_IMAGE}_buildx
-    COMMAND docker save flecs/${DOCKER_IMAGE}:${DOCKER_TAG} --output ${CMAKE_CURRENT_BINARY_DIR}/${DOCKER_IMAGE}_${DOCKER_TAG}_${ARCH}.tar
+    COMMAND docker save flecs/${DOCKER_IMAGE}:${DOCKER_TAG} --output ${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}/${DOCKER_IMAGE}_${DOCKER_TAG}_${ARCH}.tar
 )
 
 if(NOT TARGET ${DOCKER_IMAGE}_prepare)
@@ -40,10 +40,18 @@ add_custom_target(
     DEPENDS ${DOCKER_IMAGE}_buildx
     DEPENDS ${DOCKER_IMAGE}_archive
 )
+set_target_properties(
+    ${DOCKER_IMAGE}_docker PROPERTIES
+    DOCKER_ARCHIVE ${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}/${DOCKER_IMAGE}_${DOCKER_TAG}_${ARCH}.tar
+)
 
 install(FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/Dockerfile
-    DESTINATION ${CMAKE_CURRENT_BINARY_DIR}
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}
+)
+
+install(CODE
+    "execute_process(COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target ${DOCKER_IMAGE}_docker)"
 )
 
 set_property(GLOBAL APPEND PROPERTY DOCKER_IMAGES ${DOCKER_IMAGE}_docker)

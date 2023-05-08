@@ -12,20 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set(PACKAGE_DIR ${CMAKE_CURRENT_BINARY_DIR}/pkg)
-set(FLECS_INSTALL_DIR /opt/flecs/)
+set(PKGBUILD_DIR ${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}/pkg)
 
 # copy generic pkg directory
 install(
-    DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/../../pkg
-    DESTINATION ${CMAKE_CURRENT_BINARY_DIR}
+    DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/../../pkg/
+    DESTINATION ${PKGBUILD_DIR}
     USE_SOURCE_PERMISSIONS
 )
 
 # copy target-specific pkg directory
 install(
-    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/pkg
-    DESTINATION ${CMAKE_CURRENT_BINARY_DIR}
+    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/pkg/
+    DESTINATION ${PKGBUILD_DIR}
     USE_SOURCE_PERMISSIONS
     PATTERN "fs" EXCLUDE
 )
@@ -33,16 +32,16 @@ install(
 # copy target-specific additional pkg files, if exist
 install(
     DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/pkg/fs/
-    DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/pkg/debian
+    DESTINATION ${PKGBUILD_DIR}
     USE_SOURCE_PERMISSIONS
     OPTIONAL
 )
 
 # command for building .deb packages
 add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${PACKAGE}_${PACKAGE_VERSION}_${ARCH}.deb
+    OUTPUT ${PKGBUILD_DIR}/${PACKAGE}_${PACKAGE_VERSION}_${ARCH}.deb
     DEPENDS ${PACKAGE}_deb-pkg-prepare
-    COMMAND dpkg-deb --root-owner-group -Z gzip --build ${CMAKE_CURRENT_BINARY_DIR}/pkg/debian ${CMAKE_BINARY_DIR}/${PACKAGE}_${PACKAGE_VERSION}_${ARCH}.deb
+    COMMAND dpkg-deb --root-owner-group -Z gzip --build ${PKGBUILD_DIR}/debian ${PKGBUILD_DIR}/${PACKAGE}_${PACKAGE_VERSION}_${ARCH}.deb
 )
 
 if(NOT TARGET ${PACKAGE}_deb-pkg-copy)
@@ -53,13 +52,13 @@ endif()
 add_custom_target(
     ${PACKAGE}_deb-pkg-prepare
     DEPENDS ${PACKAGE}_deb-pkg-copy
-    COMMAND sed -i "s/##ARCH##/${ARCH}/g" ${CMAKE_CURRENT_BINARY_DIR}/pkg/debian/DEBIAN/control
-    COMMAND sed -i "s/##PACKAGE##/${PACKAGE}/g" ${CMAKE_CURRENT_BINARY_DIR}/pkg/debian/DEBIAN/*
-    COMMAND sed -i "s/##VERSION##/${PACKAGE_VERSION}/g" ${CMAKE_CURRENT_BINARY_DIR}/pkg/debian/DEBIAN/*
-    COMMAND sed -i "s/##DESCRIPTION##/${PACKAGE_DESC}/g" ${CMAKE_CURRENT_BINARY_DIR}/pkg/debian/DEBIAN/*
-    COMMAND sed -i "s/##DEPENDS##/${PACKAGES_DEPENDS}/g" ${CMAKE_CURRENT_BINARY_DIR}/pkg/debian/DEBIAN/*
-    COMMAND chmod 755 ${CMAKE_CURRENT_BINARY_DIR}/pkg/debian/DEBIAN/p* || true
-    COMMAND chmod 644 ${CMAKE_CURRENT_BINARY_DIR}/pkg/debian/DEBIAN/control
+    COMMAND sed -i "s/##ARCH##/${ARCH}/g" ${PKGBUILD_DIR}/debian/DEBIAN/control
+    COMMAND sed -i "s/##PACKAGE##/${PACKAGE}/g" ${PKGBUILD_DIR}/debian/DEBIAN/*
+    COMMAND sed -i "s/##VERSION##/${PACKAGE_VERSION}/g" ${PKGBUILD_DIR}/debian/DEBIAN/*
+    COMMAND sed -i "s/##DESCRIPTION##/${PACKAGE_DESC}/g" ${PKGBUILD_DIR}/debian/DEBIAN/*
+    COMMAND sed -i "s/##DEPENDS##/${PACKAGES_DEPENDS}/g" ${PKGBUILD_DIR}/debian/DEBIAN/*
+    COMMAND chmod 755 ${PKGBUILD_DIR}/debian/DEBIAN/p* || true
+    COMMAND chmod 644 ${PKGBUILD_DIR}/debian/DEBIAN/control
 )
 
 # generic package rule, depends on .deb builds
