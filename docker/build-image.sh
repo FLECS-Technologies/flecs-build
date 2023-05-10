@@ -14,60 +14,154 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-[ -z "${1}" ] && exit 1
+SCRIPT_DIR=$(dirname $(readlink -f ${0}))
+BUILD_DIR=$(readlink -f $(pwd))
 
-IMAGE=$1
-shift
-
-for arg in "$@"; do
-  DOCKER_ARGS="${DOCKER_ARGS} --build-arg $arg"
+while [ ! -z "${1}" ]; do
+  case $1 in
+    --arch)
+      ARCH="${2}"
+      shift
+      shift
+      ;;
+    --docker-arg)
+      DOCKER_ARGS+=("${2}")
+      shift
+      shift
+      ;;
+    --file)
+      DOCKERFILE="${2}"
+      shift
+      shift
+      ;;
+    --image)
+      IMAGE="$2"
+      shift
+      shift
+      ;;
+    --platform)
+      PLATFORM="$2"
+      shift
+      shift
+      ;;
+    --tag)
+      DOCKER_TAG="${2}"
+      shift
+      shift
+      ;;
+    --variant)
+      VARIANT="${2}"
+      shift
+      shift
+      ;;
+    *)
+      echo "Unknown option $1"
+      exit 1
+      ;;
+  esac
 done
 
-DIRNAME=$(dirname $(readlink -f ${0}))/${IMAGE}
+if [ -z "${ARCH}" ] && [ -z "${PLATFORM}" ]; then
+  echo "Neither ARCH nor PLATFORM specified" 1>&2
+  exit 1
+fi
 
-echo "Building image ${IMAGE} in context ${DIRNAME}"
-
-IMAGES=
-for PLATFORM in $(cat ${DIRNAME}/Docker.platforms); do
-  mkdir -p ${DIRNAME}/build-utils
-  cp -r $(git rev-parse --show-toplevel)/utils/docker ${DIRNAME}/build-utils/ || exit 1
-
+if [ -z "${ARCH}" ]; then
   case ${PLATFORM} in
   linux/arm/v7)
-    export ARCH=armhf
+    ARCH=armhf
     ;;
   linux/amd64)
-    export ARCH=amd64
+    ARCH=amd64
     ;;
   linux/arm64)
-    export ARCH=arm64
+    ARCH=arm64
     ;;
   *)
     echo "Invalid platform ${PLATFORM} specified" 1>&2
     exit 1
     ;;
   esac
+fi
 
-  if [ -d ${DIRNAME}/host-scripts ]; then
-  	cd ${DIRNAME}/host-scripts;
-  	for sh in *.sh; do
-      echo "Running host script ${sh}"
-  	  bash "${sh}"
-  	done
+if [ -z "${PLATFORM}" ]; then
+  case ${ARCH} in
+  amd64)
+    PLATFORM="linux/amd64"
+    ;;
+  arm64)
+    PLATFORM="linux/arm64"
+    ;;
+  armhf)
+    PLATFORM="linux/arm/v7"
+    ;;
+  *)
+    echo "Invalid architecture ${ARCH} specified" 1>&2
+    exit 1
+    ;;
+  esac
+fi
+
+case ${ARCH} in
+amd64|arm64|armhf)
+  ;;
+*)
+  echo "Invalid architecture ${ARCH} specified" 1>&2
+  exit 1
+  ;;
+esac
+
+case ${PLATFORM} in
+linux/arm/v7|linux/amd64|linux/arm64)
+  ;;
+*)
+  echo "Invalid platform ${PLATFORM} specified" 1>&2
+  exit 1
+  ;;
+esac
+
+if [ -z "${DOCKER_TAG}" ]; then
+  DOCKER_TAG="latest"
+fi
+
+if [ -z "${DOCKERFILE}" ]; then
+  if [ -d "${BUILD_DIR}/${IMAGE}${VARIANT}" ] && [ -f "${BUILD_DIR}/${IMAGE}${VARIANT}/Dockerfile" ]; then
+    DOCKERFILE="${BUILD_DIR}/${IMAGE}${VARIANT}/Dockerfile"
+  elif [ -f "${BUILD_DIR}/Dockerfile" ]; then
+    DOCKERFILE="${BUILD_DIR}/Dockerfile"
+  else
+    echo "No DOCKERFILE specified and none found" 1>&2
+    exit 1
   fi
+fi
 
-  docker buildx build \
-    --load \
-    --build-arg ARCH=${ARCH} \
-    --platform ${PLATFORM} \
-    --tag flecs/${IMAGE}:latest-${ARCH} \
-    --file ${DIRNAME}/Dockerfile \
-    ${DOCKER_ARGS} ${DIRNAME};
+export ARCH
 
-  IMAGES="${IMAGES} flecs/${IMAGE}:latest-${ARCH}"
+echo "Building image flecs/${IMAGE}:${DOCKER_TAG}-${ARCH} in context ${BUILD_DIR}"
 
-  git clean -dxf -- ${DIRNAME}
-done
+mkdir -p ${BUILD_DIR}/utils
+cp -r $(git -C ${SCRIPT_DIR} rev-parse --show-toplevel)/utils/docker ${BUILD_DIR}/utils/ || exit 1
 
-docker manifest rm flecs/${IMAGE}:latest >/dev/null 2>&1
-docker manifest create flecs/${IMAGE}:latest ${IMAGES}
+if [ -d ${BUILD_DIR}/host-scripts ]; then
+  cd ${BUILD_DIR}/host-scripts;
+  for sh in *.sh; do
+    echo "Running host script ${sh}"
+    bash -x "${sh}" || exit 1
+  done
+fi
+
+if [ -d ${BUILD_DIR}/${IMAGE}${VARIANT}/host-scripts ]; then
+  cd ${BUILD_DIR}/${IMAGE}${VARIANT}/host-scripts;
+  for sh in *.sh; do
+    echo "Running host script ${sh}"
+    bash -x "${sh}" || exit 1
+  done
+fi
+
+docker buildx build \
+  --load \
+  --build-arg ARCH=${ARCH} \
+  --platform ${PLATFORM} \
+  --tag flecs/${IMAGE}:${DOCKER_TAG}-${ARCH} \
+  --file ${DOCKERFILE} \
+  ${DOCKER_ARGS} ${BUILD_DIR};
