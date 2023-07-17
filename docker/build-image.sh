@@ -61,6 +61,11 @@ while [ ! -z "${1}" ]; do
   esac
 done
 
+if [ -z "${IMAGE}" ]; then
+  echo "No IMAGE specified" 1>&2
+  exit 1
+fi
+
 if [ -z "${ARCH}" ] && [ -z "${PLATFORM}" ]; then
   echo "Neither ARCH nor PLATFORM specified" 1>&2
   exit 1
