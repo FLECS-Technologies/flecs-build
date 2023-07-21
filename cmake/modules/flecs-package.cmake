@@ -32,7 +32,13 @@ install(
 # copy target-specific additional pkg files, if exist
 install(
     DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/pkg/fs/
-    DESTINATION ${PKGBUILD_DIR}
+    DESTINATION ${PKGBUILD_DIR}/debian
+    USE_SOURCE_PERMISSIONS
+    OPTIONAL
+)
+install(
+    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/pkg/fs/
+    DESTINATION ${PKGBUILD_DIR}/tar
     USE_SOURCE_PERMISSIONS
     OPTIONAL
 )
