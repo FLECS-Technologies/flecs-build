@@ -32,7 +32,8 @@ add_custom_command(
 add_custom_command(
     OUTPUT ${DOCKER_IMAGE}${DOCKER_VARIANT}_archive
     DEPENDS ${DOCKER_IMAGE}${DOCKER_VARIANT}_buildx
-    COMMAND docker save flecs/${DOCKER_IMAGE}:${DOCKER_TAG}-${ARCH} --output ${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}/${DOCKER_IMAGE}_${DOCKER_TAG}_${ARCH}.tar
+    COMMAND mkdir -p ${CMAKE_INSTALL_PREFIX}/docker
+    COMMAND docker save flecs/${DOCKER_IMAGE}:${DOCKER_TAG}-${ARCH} --output ${CMAKE_INSTALL_PREFIX}/docker/${DOCKER_IMAGE}_${DOCKER_TAG}_${ARCH}.tar
 )
 
 if(NOT TARGET ${DOCKER_IMAGE}${DOCKER_VARIANT}_prepare)

@@ -47,7 +47,8 @@ install(
 add_custom_command(
     OUTPUT ${CMAKE_INSTALL_PREFIX}/${PACKAGE}_${PACKAGE_VERSION}_${ARCH}.deb
     DEPENDS ${PACKAGE}_deb-pkg-prepare
-    COMMAND dpkg-deb --root-owner-group -Z gzip --build ${PKGBUILD_DIR}/debian ${CMAKE_INSTALL_PREFIX}/${PACKAGE}_${PACKAGE_VERSION}_${ARCH}.deb
+    COMMAND mkdir -p ${CMAKE_INSTALL_PREFIX}/pkg
+    COMMAND dpkg-deb --root-owner-group -Z gzip --build ${PKGBUILD_DIR}/debian ${CMAKE_INSTALL_PREFIX}/pkg/${PACKAGE}_${PACKAGE_VERSION}_${ARCH}.deb
 )
 
 if(NOT TARGET ${PACKAGE}_deb-pkg-copy)
@@ -67,10 +68,18 @@ add_custom_target(
     COMMAND chmod 644 ${PKGBUILD_DIR}/debian/DEBIAN/control
 )
 
-# generic package rule, depends on .deb builds
+# command for creating .tar archives
+add_custom_command(
+    OUTPUT ${CMAKE_INSTALL_PREFIX}/${PACKAGE}_${PACKAGE_VERSION}_${ARCH}.tar
+    DEPENDS ${PACKAGE}_deb-pkg-prepare
+    COMMAND fakeroot tar -C ${PKGBUILD_DIR}/tar -cvf ${CMAKE_INSTALL_PREFIX}/pkg/${PACKAGE}_${PACKAGE_VERSION}_${ARCH}.tar .
+)
+
+# generic package rule, depends on .deb and .tar builds
 add_custom_target(
     ${PACKAGE}_package
     DEPENDS ${CMAKE_INSTALL_PREFIX}/${PACKAGE}_${PACKAGE_VERSION}_${ARCH}.deb
+    DEPENDS ${CMAKE_INSTALL_PREFIX}/${PACKAGE}_${PACKAGE_VERSION}_${ARCH}.tar
 )
 
 set_property(GLOBAL APPEND PROPERTY PACKAGES ${PACKAGE}_package)
