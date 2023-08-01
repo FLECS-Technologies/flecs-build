@@ -21,10 +21,10 @@ ADD fs/ /
 COPY utils/docker/scripts/debian/install-packages.sh /tmp/
 
 RUN /tmp/install-packages.sh automake bc build-essential ca-certificates \
-    cmake/buster-backports curl g++-aarch64-linux-gnu g++-arm-linux-gnueabihf \
-    gcc-aarch64-linux-gnu gcc-arm-linux-gnueabihf gcovr git gnupg \
-    libtool libudev-dev libudev-dev:arm64 libudev-dev:armhf lsb-release \
-    ninja-build pkg-config udev wget xxd
+    cmake/buster-backports curl fakeroot g++-aarch64-linux-gnu \
+    g++-arm-linux-gnueabihf gcc-aarch64-linux-gnu gcc-arm-linux-gnueabihf \
+    gcovr git gnupg libtool libudev-dev libudev-dev:arm64 libudev-dev:armhf \
+    lsb-release ninja-build pkg-config udev wget xxd
 
 RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg]\
     https://download.docker.com/linux/debian buster stable" >\
