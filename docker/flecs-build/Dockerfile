@@ -63,11 +63,17 @@ RUN mkdir -p /usr/local/boost/include && \
 RUN mkdir -p /usr/local/boost/share/doc/boost && \
     tar -C /usr/local/boost/share/doc/boost -xf boost_1_82_0.tar.gz --strip-components 1 \
         boost_1_82_0/LICENSE_1_0.txt
+RUN mkdir -p /usr/local/boost/include/arm-linux-gnueabihf && ln -s /usr/local/include/boost /usr/local/boost/include/arm-linux-gnueabihf/boost
+RUN mkdir -p /usr/local/boost/include/aarch64-linux-gnu && ln -s /usr/local/include/boost /usr/local/boost/include/aarch64-linux-gnu/boost
 
 # crow -------------------------------------------------------------------------
 FROM stage-1 AS external-crow
 RUN curl -fsSL -O https://github.com/CrowCpp/Crow/releases/download/v1.0%2B5/crow-v1.0+5.tar.gz
 RUN mkdir -p /usr/local/crow && tar -C /usr/local/crow -xf crow-v1.0+5.tar.gz
+RUN mkdir -p /usr/local/crow/include/arm-linux-gnueabihf && ln -s /usr/local/include/crow   /usr/local/crow/include/arm-linux-gnueabihf/crow
+RUN mkdir -p /usr/local/crow/include/arm-linux-gnueabihf && ln -s /usr/local/include/crow.h /usr/local/crow/include/arm-linux-gnueabihf/crow.h
+RUN mkdir -p /usr/local/crow/include/aarch64-linux-gnu && ln -s /usr/local/include/crow   /usr/local/crow/include/aarch64-linux-gnu/crow
+RUN mkdir -p /usr/local/crow/include/aarch64-linux-gnu && ln -s /usr/local/include/crow.h /usr/local/crow/include/aarch64-linux-gnu/crow.h
 
 # googletest -------------------------------------------------------------------
 FROM stage-1 AS googletest-downloader
