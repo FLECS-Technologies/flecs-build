@@ -477,3 +477,13 @@ COPY --from=external-libarchive /usr/local/libarchive/ /usr/local/
 COPY --from=external-mosquitto /usr/local/mosquitto/ /usr/local/
 # Stage 3
 COPY --from=external-cpr /usr/local/cpr/ /usr/local/
+# additional packages required for building and running tests
+RUN apt-get update && \
+    apt-get --yes --no-install-recommends install \
+        udev && \
+    apt-get --yes clean && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN curl -fsSL --output - https://download.docker.com/linux/static/stable/x86_64/docker-24.0.5.tgz |\
+    tar -C /usr/local/bin --strip-components=1 -xzf - docker/docker && \
+    chown root:root /usr/local/bin/docker
