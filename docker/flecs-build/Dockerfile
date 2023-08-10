@@ -494,7 +494,7 @@ COPY --from=external-cpr /usr/local/cpr/ /usr/local/
 # additional packages required for building and running tests
 RUN apt-get update && \
     apt-get --yes --no-install-recommends install \
-        udev && \
+        fakeroot udev && \
     apt-get --yes clean && \
     rm -rf /var/lib/apt/lists/*
 
