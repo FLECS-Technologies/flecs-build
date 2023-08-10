@@ -21,11 +21,18 @@
 #   - flecs-build repository providing common CMake modules
 FROM debian:bookworm-slim AS stage-1
 
+ARG FLECS_DEBUG
+
+ENV BUILD_ENV=${FLECS_DEBUG:+Debug}
+ENV BUILD_ENV=${BUILD_ENV:-Release}
+
 ENV PATH="${PATH}:/usr/local/bin/x86_64-linux-gnu"
-ENV CMAKE_ARGS_COMMON="-G Ninja -B build -DCMAKE_CXX_STANDARD=17 -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_BUILD_TYPE=Release"
+ENV CMAKE_ARGS_COMMON="-G Ninja -B build -DCMAKE_CXX_STANDARD=17 -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_BUILD_TYPE=${BUILD_ENV}"
 ENV CMAKE_ARGS_AMD64="${CMAKE_ARGS_COMMON} -DCMAKE_TOOLCHAIN_FILE=/usr/src/flecs-build/cmake/toolchains/amd64.cmake"
 ENV CMAKE_ARGS_ARM64="${CMAKE_ARGS_COMMON} -DCMAKE_TOOLCHAIN_FILE=/usr/src/flecs-build/cmake/toolchains/arm64.cmake"
 ENV CMAKE_ARGS_ARMHF="${CMAKE_ARGS_COMMON} -DCMAKE_TOOLCHAIN_FILE=/usr/src/flecs-build/cmake/toolchains/armhf.cmake"
+ENV CARGO_PROFILE=${FLECS_DEBUG:+"--profile dev"}
+ENV CARGO_PROFILE=${CARGO_PROFILE:-"--profile release"}
 
 RUN dpkg --add-architecture arm64
 RUN dpkg --add-architecture armhf
@@ -216,16 +223,19 @@ FROM yaml-cpp-downloader AS yaml-cpp-build-amd64
 RUN cmake ${CMAKE_ARGS_AMD64} -DCMAKE_INSTALL_PREFIX=/usr/local/yaml-cpp -DYAML_CPP_BUILD_TESTS=NO
 RUN cmake --build build/
 RUN cmake --install build/
+RUN [ "${BUILD_ENV}" = "Debug" ] && ln -s libyaml-cppd.a /usr/local/yaml-cpp/lib/libyaml-cpp.a || true
 # aarch64-linux-gnu
 FROM yaml-cpp-downloader AS yaml-cpp-build-arm64
 RUN cmake ${CMAKE_ARGS_ARM64} -DCMAKE_INSTALL_PREFIX=/usr/local/yaml-cpp -DYAML_CPP_BUILD_TESTS=NO
 RUN cmake --build build/
 RUN cmake --install build/
+RUN [ "${BUILD_ENV}" = "Debug" ] && ln -s libyaml-cppd.a /usr/local/yaml-cpp/lib/libyaml-cpp.a || true
 # arm-linux-gnueabihf
 FROM yaml-cpp-downloader AS yaml-cpp-build-armhf
 RUN cmake ${CMAKE_ARGS_ARMHF} -DCMAKE_INSTALL_PREFIX=/usr/local/yaml-cpp -DYAML_CPP_BUILD_TESTS=NO
 RUN cmake --build build/
 RUN cmake --install build/
+RUN [ "${BUILD_ENV}" = "Debug" ] && ln -s libyaml-cppd.a /usr/local/yaml-cpp/lib/libyaml-cpp.a || true
 # install
 FROM stage-1 AS external-yaml-cpp
 COPY --from=yaml-cpp-build-amd64 /usr/local/yaml-cpp/include /usr/local/yaml-cpp/include/x86_64-linux-gnu/
@@ -237,6 +247,7 @@ COPY --from=yaml-cpp-build-armhf /usr/local/yaml-cpp/lib /usr/local/yaml-cpp/lib
 
 # zenoh-c
 FROM stage-1 AS zenoh-c-downloader
+SHELL ["/bin/bash", "-c"]
 RUN (curl -sSf https://sh.rustup.rs | bash -s -- -y) && /root/.cargo/bin/rustup toolchain uninstall stable-x86_64-unknown-linux-gnu
 ENV PATH="${PATH}:/root/.cargo/bin"
 RUN curl -fsSL -O https://github.com/eclipse-zenoh/zenoh-c/archive/refs/tags/0.6.0-beta.1.tar.gz
@@ -246,21 +257,21 @@ RUN sed -i 's/stable/1.64.0/g' /usr/src/zenoh-c-0.6.0-beta.1/rust-toolchain
 # x86_64-linux-gnu
 FROM zenoh-c-downloader AS zenoh-c-build-amd64
 RUN rustup target add x86_64-unknown-linux-gnu
-RUN RUSTFLAGS="-Clinker=x86_64-linux-gnu-gcc" cargo build --release --target=x86_64-unknown-linux-gnu
+RUN RUSTFLAGS="-Clinker=x86_64-linux-gnu-gcc" cargo build ${CARGO_PROFILE} --target=x86_64-unknown-linux-gnu
 RUN mkdir -p /usr/local/include && cp -prT include /usr/local/include
-RUN mkdir -p /usr/local/lib && cp target/x86_64-unknown-linux-gnu/release/libzenohc.a /usr/local/lib/
+RUN mkdir -p /usr/local/lib && cp target/x86_64-unknown-linux-gnu/${BUILD_ENV,}/libzenohc.a /usr/local/lib/
 # aarch64-linux-gnu
 FROM zenoh-c-downloader AS zenoh-c-build-arm64
 RUN rustup target add aarch64-unknown-linux-gnu
-RUN RUSTFLAGS="-Clinker=aarch64-linux-gnu-gcc" cargo build --release --target=aarch64-unknown-linux-gnu
+RUN RUSTFLAGS="-Clinker=aarch64-linux-gnu-gcc" cargo build ${CARGO_PROFILE} --target=aarch64-unknown-linux-gnu
 RUN mkdir -p /usr/local/include && cp -prT include /usr/local/include
-RUN mkdir -p /usr/local/lib && cp target/aarch64-unknown-linux-gnu/release/libzenohc.a /usr/local/lib/
+RUN mkdir -p /usr/local/lib && cp target/aarch64-unknown-linux-gnu/${BUILD_ENV,}/libzenohc.a /usr/local/lib/
 # arm-linux-gnueabihf
 FROM zenoh-c-downloader AS zenoh-c-build-armhf
 RUN rustup target add armv7-unknown-linux-gnueabihf
-RUN RUSTFLAGS="-Clinker=arm-linux-gnueabihf-gcc" cargo build --release --target=armv7-unknown-linux-gnueabihf
+RUN RUSTFLAGS="-Clinker=arm-linux-gnueabihf-gcc" cargo build ${CARGO_PROFILE} --target=armv7-unknown-linux-gnueabihf
 RUN mkdir -p /usr/local/include && cp -prT include /usr/local/include
-RUN mkdir -p /usr/local/lib && cp target/armv7-unknown-linux-gnueabihf/release/libzenohc.a /usr/local/lib/
+RUN mkdir -p /usr/local/lib && cp target/armv7-unknown-linux-gnueabihf/${BUILD_ENV,}/libzenohc.a /usr/local/lib/
 # install
 FROM stage-1 AS external-zenoh-c
 COPY --from=zenoh-c-build-amd64 /usr/local/include /usr/local/zenoh-c/include/x86_64-linux-gnu/
@@ -330,19 +341,22 @@ RUN mkdir -p /usr/src && tar -C /usr/src -xf curl-8.2.1.tar.gz
 WORKDIR /usr/src/curl-8.2.1
 # x86_64-linux-gnu
 FROM curl-downloader AS curl-build-amd64
-RUN cmake ${CMAKE_ARGS_AMD64} -DCMAKE_INSTALL_PREFIX=/usr/local/curl -DCMAKE_INSTALL_LIBDIR=lib/x86_64-linux-gnu -DCMAKE_INSTALL_BINDIR=bin/x86_64-linux-gnu -DCMAKE_INSTALL_INCLUDEDIR=include/x86_64-linux-gnu -DBUILD_SHARED_LIBS=NO -DBUILD_CURL_EXE=NO
+RUN cmake ${CMAKE_ARGS_AMD64} -DCMAKE_INSTALL_PREFIX=/usr/local/curl -DCMAKE_INSTALL_LIBDIR=lib/x86_64-linux-gnu -DCMAKE_INSTALL_BINDIR=bin/x86_64-linux-gnu -DCMAKE_INSTALL_INCLUDEDIR=include/x86_64-linux-gnu -DCURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt -DBUILD_SHARED_LIBS=NO -DBUILD_CURL_EXE=NO
 RUN cmake --build build/
 RUN cmake --install build/
+RUN [ "${BUILD_ENV}" = "Debug" ] && ln -s libcurl-d.a /usr/local/curl/lib/x86_64-linux-gnu/libcurl.a || true
 # aarch64-linux-gnu
 FROM curl-downloader AS curl-build-arm64
-RUN cmake ${CMAKE_ARGS_ARM64} -DCMAKE_INSTALL_PREFIX=/usr/local/curl -DCMAKE_INSTALL_LIBDIR=lib/aarch64-linux-gnu -DCMAKE_INSTALL_BINDIR=bin/aarch64-linux-gnu -DCMAKE_INSTALL_INCLUDEDIR=include/aarch64-linux-gnu -DBUILD_SHARED_LIBS=NO -DBUILD_CURL_EXE=NO
+RUN cmake ${CMAKE_ARGS_ARM64} -DCMAKE_INSTALL_PREFIX=/usr/local/curl -DCMAKE_INSTALL_LIBDIR=lib/aarch64-linux-gnu -DCMAKE_INSTALL_BINDIR=bin/aarch64-linux-gnu -DCMAKE_INSTALL_INCLUDEDIR=include/aarch64-linux-gnu -DCURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt -DBUILD_SHARED_LIBS=NO -DBUILD_CURL_EXE=NO
 RUN cmake --build build/
 RUN cmake --install build/
+RUN [ "${BUILD_ENV}" = "Debug" ] && ln -s libcurl-d.a /usr/local/curl/lib/aarch64-linux-gnu/libcurl.a || true
 # arm-linux-gnueabihf
 FROM curl-downloader AS curl-build-armhf
-RUN cmake ${CMAKE_ARGS_ARMHF} -DCMAKE_INSTALL_PREFIX=/usr/local/curl -DCMAKE_INSTALL_LIBDIR=lib/arm-linux-gnueabihf -DCMAKE_INSTALL_BINDIR=bin/arm-linux-gnueabihf -DCMAKE_INSTALL_INCLUDEDIR=include/arm-linux-gnueabihf -DBUILD_SHARED_LIBS=NO -DBUILD_CURL_EXE=NO
+RUN cmake ${CMAKE_ARGS_ARMHF} -DCMAKE_INSTALL_PREFIX=/usr/local/curl -DCMAKE_INSTALL_LIBDIR=lib/arm-linux-gnueabihf -DCMAKE_INSTALL_BINDIR=bin/arm-linux-gnueabihf -DCMAKE_INSTALL_INCLUDEDIR=include/arm-linux-gnueabihf -DCURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt -DBUILD_SHARED_LIBS=NO -DBUILD_CURL_EXE=NO
 RUN cmake --build build/
 RUN cmake --install build/
+RUN [ "${BUILD_ENV}" = "Debug" ] && ln -s libcurl-d.a /usr/local/curl/lib/arm-linux-gnueabihf/libcurl.a || true
 # install
 FROM stage-1 AS external-curl
 COPY --from=curl-build-amd64 /usr/local/curl/include/ /usr/local/curl/include/
