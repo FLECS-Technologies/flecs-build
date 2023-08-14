@@ -215,9 +215,9 @@ COPY --from=openssl-build-armhf /usr/local/openssl/lib /usr/local/openssl/lib/ar
 
 # yaml-cpp ---------------------------------------------------------------------
 FROM stage-1 AS yaml-cpp-downloader
-RUN curl -fsSL -O https://github.com/jbeder/yaml-cpp/archive/refs/tags/yaml-cpp-0.7.0.tar.gz
-RUN mkdir -p /usr/src && tar -C /usr/src -xf yaml-cpp-0.7.0.tar.gz
-WORKDIR /usr/src/yaml-cpp-yaml-cpp-0.7.0
+RUN curl -fsSL -O https://github.com/jbeder/yaml-cpp/archive/refs/tags/0.8.0.tar.gz
+RUN mkdir -p /usr/src && tar -C /usr/src -xf 0.8.0.tar.gz
+WORKDIR /usr/src/yaml-cpp-0.8.0
 # x86_64-linux-gnu
 FROM yaml-cpp-downloader AS yaml-cpp-build-amd64
 RUN cmake ${CMAKE_ARGS_AMD64} -DCMAKE_INSTALL_PREFIX=/usr/local/yaml-cpp -DYAML_CPP_BUILD_TESTS=NO
