@@ -24,10 +24,10 @@ set(CMAKE_MODULE_PATH
 )
 
 # set default CXX flags
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 set(CMAKE_CXX_EXTENSIONS OFF)
-add_compile_options(-Wall -Wextra -Werror -Wfatal-errors)
+add_compile_options(-Wextra -Werror -Wfatal-errors)
 link_libraries(dl pthread stdc++fs)
 
 # hide all symbols by default
