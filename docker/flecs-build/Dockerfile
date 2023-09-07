@@ -59,6 +59,35 @@ RUN apt-get update && \
 
 # ------------------------------------------------------------------------------
 # Stage 1 dependencies / self-contained
+# Base64pp ---------------------------------------------------------------------
+FROM stage-1 AS base64pp-downloader
+RUN curl -fsSL -O https://github.com/matheusgomes28/base64pp/archive/refs/tags/v0.2.0-rc0.tar.gz
+RUN mkdir -p /usr/src && tar -C /usr/src -xf v0.2.0-rc0.tar.gz
+WORKDIR /usr/src/base64pp-0.2.0-rc0
+# x86_64-linux-gnu
+FROM base64pp-downloader AS base64pp-build-amd64
+RUN cmake ${CMAKE_ARGS_AMD64} -DCMAKE_INSTALL_PREFIX=/usr/local/base64pp
+RUN cmake --build build/
+RUN cmake --install build/
+# aarch64-linux-gnu
+FROM base64pp-downloader AS base64pp-build-arm64
+RUN cmake ${CMAKE_ARGS_ARM64} -DCMAKE_INSTALL_PREFIX=/usr/local/base64pp
+RUN cmake --build build/
+RUN cmake --install build/
+# arm-linux-gnueabihf
+FROM base64pp-downloader AS base64pp-build-armhf
+RUN cmake ${CMAKE_ARGS_ARMHF} -DCMAKE_INSTALL_PREFIX=/usr/local/base64pp
+RUN cmake --build build/
+RUN cmake --install build/
+# install
+FROM stage-1 AS external-base64pp
+COPY --from=base64pp-build-amd64 /usr/local/base64pp/include /usr/local/base64pp/include/x86_64-linux-gnu/
+COPY --from=base64pp-build-arm64 /usr/local/base64pp/include /usr/local/base64pp/include/aarch64-linux-gnu/
+COPY --from=base64pp-build-armhf /usr/local/base64pp/include /usr/local/base64pp/include/arm-linux-gnueabihf/
+COPY --from=base64pp-build-amd64 /usr/local/base64pp/lib /usr/local/base64pp/lib/x86_64-linux-gnu/
+COPY --from=base64pp-build-arm64 /usr/local/base64pp/lib /usr/local/base64pp/lib/aarch64-linux-gnu/
+COPY --from=base64pp-build-armhf /usr/local/base64pp/lib /usr/local/base64pp/lib/arm-linux-gnueabihf/
+
 # Boost ------------------------------------------------------------------------
 FROM stage-1 AS external-boost
 
@@ -476,6 +505,7 @@ COPY --from=cpr-build-armhf /usr/local/cpr/lib /usr/local/cpr/lib/arm-linux-gnue
 
 FROM stage-1 AS flecs-build
 # Stage 1
+COPY --from=external-base64pp /usr/local/base64pp /usr/local/
 COPY --from=external-boost /usr/local/boost/ /usr/local/
 COPY --from=external-crow /usr/local/crow/ /usr/local/
 COPY --from=external-googletest /usr/local/googletest/ /usr/local/
