@@ -376,12 +376,12 @@ RUN apt-get update && \
         dirmngr gpg gpg-agent && \
     apt-get --yes clean && \
     rm -rf /var/lib/apt/lists/*
-RUN curl -fsSL -O https://github.com/libarchive/libarchive/releases/download/v3.7.1/libarchive-3.7.1.tar.gz
-RUN curl -fsSL -O https://github.com/libarchive/libarchive/releases/download/v3.7.1/libarchive-3.7.1.tar.gz.asc
+RUN curl -fsSL -O https://github.com/libarchive/libarchive/releases/download/v3.7.2/libarchive-3.7.2.tar.gz
+RUN curl -fsSL -O https://github.com/libarchive/libarchive/releases/download/v3.7.2/libarchive-3.7.2.tar.gz.asc
 RUN gpg --keyserver 'hkps://keyserver.ubuntu.com' --recv-keys 'DB2C7CF1B4C265FAEF56E3FC5848A18B8F14184B'
-RUN gpg --verify libarchive-3.7.1.tar.gz.asc libarchive-3.7.1.tar.gz
-RUN mkdir -p /usr/src && tar -C /usr/src -xf libarchive-3.7.1.tar.gz
-WORKDIR /usr/src/libarchive-3.7.1
+RUN gpg --verify libarchive-3.7.2.tar.gz.asc libarchive-3.7.2.tar.gz
+RUN mkdir -p /usr/src && tar -C /usr/src -xf libarchive-3.7.2.tar.gz
+WORKDIR /usr/src/libarchive-3.7.2
 # x86_64-linux-gnu
 FROM libarchive-downloader AS libarchive-build-amd64
 RUN cmake ${CMAKE_ARGS_AMD64} -DCMAKE_INSTALL_PREFIX=/usr/local/libarchive -DENABLE_LIBXML2=OFF -DENABLE_EXPAT=OFF
