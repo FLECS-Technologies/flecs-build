@@ -333,12 +333,12 @@ RUN apt-get update && \
         dirmngr gpg gpg-agent && \
     apt-get --yes clean && \
     rm -rf /var/lib/apt/lists/*
-RUN curl -fsSL -O https://github.com/curl/curl/releases/download/curl-8_2_1/curl-8.2.1.tar.gz
-RUN curl -fsSL -O https://github.com/curl/curl/releases/download/curl-8_2_1/curl-8.2.1.tar.gz.asc
+RUN curl -fsSL -O https://github.com/curl/curl/releases/download/curl-8_3_0/curl-8.3.0.tar.gz
+RUN curl -fsSL -O https://github.com/curl/curl/releases/download/curl-8_3_0/curl-8.3.0.tar.gz.asc
 RUN gpg --keyserver 'hkps://keyserver.ubuntu.com' --recv-keys '27EDEAF22F3ABCEB50DB9A125CC908FDB71E12C2'
-RUN gpg --verify curl-8.2.1.tar.gz.asc curl-8.2.1.tar.gz
-RUN mkdir -p /usr/src && tar -C /usr/src -xf curl-8.2.1.tar.gz
-WORKDIR /usr/src/curl-8.2.1
+RUN gpg --verify curl-8.3.0.tar.gz.asc curl-8.3.0.tar.gz
+RUN mkdir -p /usr/src && tar -C /usr/src -xf curl-8.3.0.tar.gz
+WORKDIR /usr/src/curl-8.3.0
 # x86_64-linux-gnu
 FROM curl-downloader AS curl-build-amd64
 RUN cmake ${CMAKE_ARGS_AMD64} -DCMAKE_INSTALL_PREFIX=/usr/local/curl -DCMAKE_INSTALL_LIBDIR=lib/x86_64-linux-gnu -DCMAKE_INSTALL_BINDIR=bin/x86_64-linux-gnu -DCMAKE_INSTALL_INCLUDEDIR=include/x86_64-linux-gnu -DCURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt -DBUILD_SHARED_LIBS=NO -DBUILD_CURL_EXE=NO
