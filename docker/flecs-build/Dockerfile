@@ -288,12 +288,12 @@ RUN apt-get update && \
         dirmngr gpg gpg-agent && \
     apt-get --yes clean && \
     rm -rf /var/lib/apt/lists/*
-RUN curl -fsSL -O https://github.com/madler/zlib/releases/download/v1.2.13/zlib-1.2.13.tar.gz
-RUN curl -fsSL -O https://github.com/madler/zlib/releases/download/v1.2.13/zlib-1.2.13.tar.gz.asc
+RUN curl -fsSL -O https://github.com/madler/zlib/releases/download/v1.3/zlib-1.3.tar.gz
+RUN curl -fsSL -O https://github.com/madler/zlib/releases/download/v1.3/zlib-1.3.tar.gz.asc
 RUN gpg --keyserver 'hkps://keyserver.ubuntu.com' --recv-keys '5ED46A6721D365587791E2AA783FCD8E58BCAFBA'
-RUN gpg --verify zlib-1.2.13.tar.gz.asc zlib-1.2.13.tar.gz
-RUN mkdir -p /usr/src && tar -C /usr/src -xf zlib-1.2.13.tar.gz
-WORKDIR /usr/src/zlib-1.2.13
+RUN gpg --verify zlib-1.3.tar.gz.asc zlib-1.3.tar.gz
+RUN mkdir -p /usr/src && tar -C /usr/src -xf zlib-1.3.tar.gz
+WORKDIR /usr/src/zlib-1.3
 # x86_64-linux-gnu
 FROM zlib-downloader AS zlib-build-amd64
 RUN cmake ${CMAKE_ARGS_AMD64} -DCMAKE_INSTALL_PREFIX=/usr/local/zlib
