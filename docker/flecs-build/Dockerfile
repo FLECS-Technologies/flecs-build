@@ -411,9 +411,9 @@ COPY --from=libarchive-build-armhf /usr/local/libarchive/lib /usr/local/libarchi
 
 # mosquitto --------------------------------------------------------------------
 FROM stage-2 AS mosquitto-downloader
-RUN curl -fsSL -O https://github.com/eclipse/mosquitto/archive/refs/tags/v2.0.15.tar.gz
-RUN mkdir -p /usr/src && tar -C /usr/src -xf v2.0.15.tar.gz
-WORKDIR /usr/src/mosquitto-2.0.15
+RUN curl -fsSL -O https://github.com/eclipse/mosquitto/archive/refs/tags/v2.0.18.tar.gz
+RUN mkdir -p /usr/src && tar -C /usr/src -xf v2.0.18.tar.gz
+WORKDIR /usr/src/mosquitto-2.0.18
 # x86_64-linux-gnu
 FROM mosquitto-downloader AS mosquitto-build-amd64
 RUN cmake ${CMAKE_ARGS_AMD64} -DCMAKE_INSTALL_PREFIX=/usr/local/mosquitto -DDOCUMENTATION=NO -DWITH_STATIC_LIBRARIES=YES -DWITH_PIC=YES -DWITH_APPS=NO -DWITH_BROKER=NO -DWITH_CLIENTS=NO -DWITH_PLUGINS=NO
