@@ -62,14 +62,14 @@ RUN apt-get update && \
 # Boost ------------------------------------------------------------------------
 FROM stage-1 AS external-boost
 
-RUN curl -fsSL -O https://boostorg.jfrog.io/artifactory/main/release/1.82.0/source/boost_1_82_0.tar.gz
+RUN curl -fsSL -O https://boostorg.jfrog.io/artifactory/main/release/1.83.0/source/boost_1_83_0.tar.gz
 
 RUN mkdir -p /usr/local/boost/include && \
-    tar -C /usr/local/boost/include -xf boost_1_82_0.tar.gz --strip-components 1 \
-        boost_1_82_0/boost
+    tar -C /usr/local/boost/include -xf boost_1_83_0.tar.gz --strip-components 1 \
+        boost_1_83_0/boost
 RUN mkdir -p /usr/local/boost/share/doc/boost && \
-    tar -C /usr/local/boost/share/doc/boost -xf boost_1_82_0.tar.gz --strip-components 1 \
-        boost_1_82_0/LICENSE_1_0.txt
+    tar -C /usr/local/boost/share/doc/boost -xf boost_1_83_0.tar.gz --strip-components 1 \
+        boost_1_83_0/LICENSE_1_0.txt
 RUN mkdir -p /usr/local/boost/include/arm-linux-gnueabihf && ln -s /usr/local/include/boost /usr/local/boost/include/arm-linux-gnueabihf/boost
 RUN mkdir -p /usr/local/boost/include/aarch64-linux-gnu && ln -s /usr/local/include/boost /usr/local/boost/include/aarch64-linux-gnu/boost
 
