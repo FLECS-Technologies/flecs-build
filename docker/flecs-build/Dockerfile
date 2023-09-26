@@ -498,6 +498,6 @@ RUN apt-get update && \
     apt-get --yes clean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN curl -fsSL --output - https://download.docker.com/linux/static/stable/x86_64/docker-24.0.5.tgz |\
+RUN curl -fsSL --output - https://download.docker.com/linux/static/stable/x86_64/docker-24.0.6.tgz |\
     tar -C /usr/local/bin --strip-components=1 -xzf - docker/docker && \
     chown root:root /usr/local/bin/docker
