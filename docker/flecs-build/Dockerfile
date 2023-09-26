@@ -184,11 +184,11 @@ COPY --from=libusb-build-armhf /usr/local/libusb/lib /usr/local/libusb/lib/arm-l
 
 # OpenSSL ----------------------------------------------------------------------
 FROM stage-1-make AS openssl-downloader
-RUN curl -fsSL -O https://www.openssl.org/source/openssl-3.1.2.tar.gz
-RUN curl -fsSL -O https://www.openssl.org/source/openssl-3.1.2.tar.gz.sha256
-RUN echo "$(cat openssl-3.1.2.tar.gz.sha256) openssl-3.1.2.tar.gz" | sha256sum --check --status
-RUN mkdir -p /usr/src && tar -C /usr/src -xf openssl-3.1.2.tar.gz
-WORKDIR /usr/src/openssl-3.1.2
+RUN curl -fsSL -O https://www.openssl.org/source/openssl-3.1.3.tar.gz
+RUN curl -fsSL -O https://www.openssl.org/source/openssl-3.1.3.tar.gz.sha256
+RUN echo "$(cat openssl-3.1.3.tar.gz.sha256) openssl-3.1.3.tar.gz" | sha256sum --check --status
+RUN mkdir -p /usr/src && tar -C /usr/src -xf openssl-3.1.3.tar.gz
+WORKDIR /usr/src/openssl-3.1.3
 # x86_64-linux-gnu
 FROM openssl-downloader AS openssl-build-amd64
 RUN ./Configure linux-x86_64 --libdir=lib --cross-compile-prefix=x86_64-linux-gnu- --prefix=/usr/local/openssl no-shared
