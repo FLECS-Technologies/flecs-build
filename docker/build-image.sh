@@ -130,8 +130,8 @@ if [ -z "${DOCKER_TAG}" ]; then
 fi
 
 if [ -z "${DOCKERFILE}" ]; then
-  if [ -d "${BUILD_DIR}/${IMAGE}${VARIANT}" ] && [ -f "${BUILD_DIR}/${IMAGE}${VARIANT}/Dockerfile" ]; then
-    DOCKERFILE="${BUILD_DIR}/${IMAGE}${VARIANT}/Dockerfile"
+  if [ -d "${BUILD_DIR}/${IMAGE##*/}${VARIANT}" ] && [ -f "${BUILD_DIR}/${IMAGE##*/}${VARIANT}/Dockerfile" ]; then
+    DOCKERFILE="${BUILD_DIR}/${IMAGE##*/}${VARIANT}/Dockerfile"
   elif [ -f "${BUILD_DIR}/Dockerfile" ]; then
     DOCKERFILE="${BUILD_DIR}/Dockerfile"
   else
@@ -142,7 +142,7 @@ fi
 
 export ARCH
 
-echo "Building image flecs/${IMAGE}:${DOCKER_TAG}-${ARCH} in context ${BUILD_DIR}"
+echo "Building image ${IMAGE}:${DOCKER_TAG}-${ARCH} in context ${BUILD_DIR}"
 
 mkdir -p ${BUILD_DIR}/utils
 cp -r $(git -C ${SCRIPT_DIR} rev-parse --show-toplevel)/utils/docker ${BUILD_DIR}/utils/ || exit 1
@@ -167,6 +167,6 @@ docker buildx build \
   --load \
   --build-arg ARCH=${ARCH} \
   --platform ${PLATFORM} \
-  --tag flecs/${IMAGE}:${DOCKER_TAG}-${ARCH} \
+  --tag ${IMAGE}:${DOCKER_TAG}-${ARCH} \
   --file ${DOCKERFILE} \
   ${DOCKER_ARGS} ${BUILD_DIR};

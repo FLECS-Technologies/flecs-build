@@ -26,14 +26,14 @@ endif()
 add_custom_command(
     OUTPUT ${DOCKER_IMAGE}${DOCKER_VARIANT}_buildx
     WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}/docker
-    COMMAND bash -x ${CMAKE_CURRENT_LIST_DIR}/../../docker/build-image.sh --arch ${ARCH} --image ${DOCKER_IMAGE} --tag ${DOCKER_TAG} --variant ${DOCKER_VARIANT}
+    COMMAND bash -x ${CMAKE_CURRENT_LIST_DIR}/../../docker/build-image.sh --arch ${ARCH} --image ${DOCKER_REGISTRY}/${DOCKER_IMAGE} --tag ${DOCKER_TAG} --variant ${DOCKER_VARIANT}
 )
 
 add_custom_command(
     OUTPUT ${DOCKER_IMAGE}${DOCKER_VARIANT}_archive
     DEPENDS ${DOCKER_IMAGE}${DOCKER_VARIANT}_buildx
     COMMAND mkdir -p ${CMAKE_INSTALL_PREFIX}/docker
-    COMMAND docker save flecs/${DOCKER_IMAGE}:${DOCKER_TAG}-${ARCH} --output ${CMAKE_INSTALL_PREFIX}/docker/${DOCKER_IMAGE}_${DOCKER_TAG}_${ARCH}.tar
+    COMMAND docker save ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${DOCKER_TAG}-${ARCH} --output ${CMAKE_INSTALL_PREFIX}/docker/${DOCKER_IMAGE}_${DOCKER_TAG}_${ARCH}.tar
 )
 
 if(NOT TARGET ${DOCKER_IMAGE}${DOCKER_VARIANT}_prepare)
