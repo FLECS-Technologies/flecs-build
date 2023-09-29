@@ -75,12 +75,19 @@ RUN mkdir -p /usr/local/boost/include/aarch64-linux-gnu && ln -s /usr/local/incl
 
 # crow -------------------------------------------------------------------------
 FROM stage-1 AS external-crow
+RUN apt-get update && \
+    apt-get --yes --no-install-recommends install \
+        patch && \
+    apt-get --yes clean && \
+    rm -rf /var/lib/apt/lists/*
 RUN curl -fsSL -O https://github.com/CrowCpp/Crow/releases/download/v1.0%2B5/crow-v1.0+5.tar.gz
 RUN mkdir -p /usr/local/crow && tar -C /usr/local/crow -xf crow-v1.0+5.tar.gz
 RUN mkdir -p /usr/local/crow/include/arm-linux-gnueabihf && ln -s /usr/local/include/crow   /usr/local/crow/include/arm-linux-gnueabihf/crow
 RUN mkdir -p /usr/local/crow/include/arm-linux-gnueabihf && ln -s /usr/local/include/crow.h /usr/local/crow/include/arm-linux-gnueabihf/crow.h
 RUN mkdir -p /usr/local/crow/include/aarch64-linux-gnu && ln -s /usr/local/include/crow   /usr/local/crow/include/aarch64-linux-gnu/crow
 RUN mkdir -p /usr/local/crow/include/aarch64-linux-gnu && ln -s /usr/local/include/crow.h /usr/local/crow/include/aarch64-linux-gnu/crow.h
+ADD patches/crow/ /tmp/
+RUN cd /usr/local/crow/include && patch -p 1 -i /tmp/*.patch
 
 # googletest -------------------------------------------------------------------
 FROM stage-1 AS googletest-downloader
