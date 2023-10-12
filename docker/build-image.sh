@@ -144,9 +144,6 @@ export ARCH
 
 echo "Building image ${IMAGE}:${DOCKER_TAG}-${ARCH} in context ${BUILD_DIR}"
 
-mkdir -p ${BUILD_DIR}/utils
-cp -r $(git -C ${SCRIPT_DIR} rev-parse --show-toplevel)/utils/docker ${BUILD_DIR}/utils/ || exit 1
-
 if [ -d ${BUILD_DIR}/host-scripts ]; then
   cd ${BUILD_DIR}/host-scripts;
   for sh in *.sh; do
