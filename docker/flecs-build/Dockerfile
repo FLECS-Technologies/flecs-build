@@ -484,7 +484,21 @@ COPY --from=cpr-build-amd64 /usr/local/lib /usr/local/lib
 COPY --from=cpr-build-arm64 /usr/local/lib /usr/local/lib
 COPY --from=cpr-build-armhf /usr/local/lib /usr/local/lib
 
+FROM stage-1 AS docker-downloader
+
+RUN curl -fsSL --output - https://download.docker.com/linux/static/stable/x86_64/docker-24.0.6.tgz |\
+    tar -C /usr/local/bin --strip-components=1 -xzf - docker/docker && \
+    chown root:root /usr/local/bin/docker
+
 FROM stage-1 AS flecs-build
+
+# additional packages required for building and running tests
+RUN apt-get update && \
+    apt-get --yes --no-install-recommends install \
+    fakeroot gcovr pkg-config udev && \
+    apt-get --yes clean && \
+    rm -rf /var/lib/apt/lists/*
+
 # Stage 1
 COPY --from=external-boost /usr/local/ /usr/local/
 COPY --from=external-crow /usr/local/ /usr/local/
@@ -501,13 +515,5 @@ COPY --from=external-libarchive /usr/local/ /usr/local/
 COPY --from=external-mosquitto /usr/local/ /usr/local/
 # Stage 3
 COPY --from=external-cpr /usr/local/ /usr/local/
-# additional packages required for building and running tests
-RUN apt-get update && \
-    apt-get --yes --no-install-recommends install \
-    fakeroot gcovr pkg-config udev && \
-    apt-get --yes clean && \
-    rm -rf /var/lib/apt/lists/*
-
-RUN curl -fsSL --output - https://download.docker.com/linux/static/stable/x86_64/docker-24.0.6.tgz |\
-    tar -C /usr/local/bin --strip-components=1 -xzf - docker/docker && \
-    chown root:root /usr/local/bin/docker
+# Docker
+COPY --from=docker-downloader /usr/local/bin/docker /usr/local/bin
