@@ -429,25 +429,19 @@ RUN mkdir -p /usr/src && tar -C /usr/src -xf v2.0.18.tar.gz
 WORKDIR /usr/src/mosquitto-2.0.18
 # x86_64-linux-gnu
 FROM mosquitto-downloader AS mosquitto-build-amd64
-RUN cmake ${CMAKE_ARGS_AMD64} -DDOCUMENTATION=NO -DWITH_STATIC_LIBRARIES=YES -DWITH_PIC=YES -DWITH_APPS=NO -DWITH_BROKER=NO -DWITH_CLIENTS=NO -DWITH_PLUGINS=NO -DWITH_LIB_CPP=NO
+RUN cmake ${CMAKE_ARGS_AMD64} -DDOCUMENTATION=NO -DWITH_STATIC_LIBRARIES=NO -DWITH_PIC=YES -DWITH_APPS=NO -DWITH_BROKER=NO -DWITH_CLIENTS=NO -DWITH_PLUGINS=NO -DWITH_LIB_CPP=NO
 RUN cmake --build build/
 RUN cmake --install build/
-RUN find /usr/local/lib/ -name "*.so*" -exec rm {} \;
-RUN sed -i 's/-lmosquitto/-lmosquitto_static/g' /usr/local/lib/x86_64-linux-gnu/pkgconfig/libmosquitto.pc
 # aarch64-linux-gnu
 FROM mosquitto-downloader AS mosquitto-build-arm64
-RUN cmake ${CMAKE_ARGS_ARM64} -DDOCUMENTATION=NO -DWITH_STATIC_LIBRARIES=YES -DWITH_PIC=YES -DWITH_APPS=NO -DWITH_BROKER=NO -DWITH_CLIENTS=NO -DWITH_PLUGINS=NO -DWITH_LIB_CPP=NO
+RUN cmake ${CMAKE_ARGS_ARM64} -DDOCUMENTATION=NO -DWITH_STATIC_LIBRARIES=NO -DWITH_PIC=YES -DWITH_APPS=NO -DWITH_BROKER=NO -DWITH_CLIENTS=NO -DWITH_PLUGINS=NO -DWITH_LIB_CPP=NO
 RUN cmake --build build/
 RUN cmake --install build/
-RUN find /usr/local/lib/ -name "*.so*" -exec rm {} \;
-RUN sed -i 's/-lmosquitto/-lmosquitto_static/g' /usr/local/lib/aarch64-linux-gnu/pkgconfig/libmosquitto.pc
 # arm-linux-gnueabihf
 FROM mosquitto-downloader AS mosquitto-build-armhf
-RUN cmake ${CMAKE_ARGS_ARMHF} -DDOCUMENTATION=NO -DWITH_STATIC_LIBRARIES=YES -DWITH_PIC=YES -DWITH_APPS=NO -DWITH_BROKER=NO -DWITH_CLIENTS=NO -DWITH_PLUGINS=NO -DWITH_LIB_CPP=NO
+RUN cmake ${CMAKE_ARGS_ARMHF} -DDOCUMENTATION=NO -DWITH_STATIC_LIBRARIES=NO -DWITH_PIC=YES -DWITH_APPS=NO -DWITH_BROKER=NO -DWITH_CLIENTS=NO -DWITH_PLUGINS=NO -DWITH_LIB_CPP=NO
 RUN cmake --build build/
 RUN cmake --install build/
-RUN find /usr/local/lib/ -name "*.so*" -exec rm {} \;
-RUN sed -i 's/-lmosquitto/-lmosquitto_static/g' /usr/local/lib/arm-linux-gnueabihf/pkgconfig/libmosquitto.pc
 # install
 FROM stage-1 AS external-mosquitto
 COPY --from=mosquitto-build-amd64 /usr/local/include /usr/local/include
