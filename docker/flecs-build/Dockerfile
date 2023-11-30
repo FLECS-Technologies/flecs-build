@@ -126,8 +126,8 @@ RUN apt-get update && \
     dirmngr gpg gpg-agent xz-utils && \
     apt-get --yes clean && \
     rm -rf /var/lib/apt/lists/*
-RUN curl -fsSL -O https://github.com/nlohmann/json/releases/download/v3.11.2/json.tar.xz
-RUN curl -fsSL -O https://github.com/nlohmann/json/releases/download/v3.11.2/json.tar.xz.asc
+RUN curl -fsSL -O https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz
+RUN curl -fsSL -O https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz.asc
 RUN gpg --keyserver 'hkps://keyserver.ubuntu.com' --recv-keys '797167AE41C0A6D9232E48457F3CEA63AE251B69'
 RUN gpg --verify json.tar.xz.asc json.tar.xz
 RUN mkdir -p /usr/src && tar -C /usr/src -xf json.tar.xz
@@ -195,11 +195,11 @@ COPY --from=libusb-build-armhf /usr/local/lib /usr/local/lib
 
 # OpenSSL ----------------------------------------------------------------------
 FROM stage-1-make AS openssl-downloader
-RUN curl -fsSL -O https://www.openssl.org/source/openssl-3.1.3.tar.gz
-RUN curl -fsSL -O https://www.openssl.org/source/openssl-3.1.3.tar.gz.sha256
-RUN echo "$(cat openssl-3.1.3.tar.gz.sha256) openssl-3.1.3.tar.gz" | sha256sum --check --status
-RUN mkdir -p /usr/src && tar -C /usr/src -xf openssl-3.1.3.tar.gz
-WORKDIR /usr/src/openssl-3.1.3
+RUN curl -fsSL -O https://www.openssl.org/source/openssl-3.2.0.tar.gz
+RUN curl -fsSL -O https://www.openssl.org/source/openssl-3.2.0.tar.gz.sha256
+RUN echo "$(cat openssl-3.2.0.tar.gz.sha256) openssl-3.2.0.tar.gz" | sha256sum --check --status
+RUN mkdir -p /usr/src && tar -C /usr/src -xf openssl-3.2.0.tar.gz
+WORKDIR /usr/src/openssl-3.2.0
 # x86_64-linux-gnu
 FROM openssl-downloader AS openssl-build-amd64
 RUN ./Configure linux-x86_64 --libdir=lib --cross-compile-prefix=x86_64-linux-gnu- --prefix=/usr/local no-shared
@@ -346,12 +346,12 @@ RUN apt-get update && \
     dirmngr gpg gpg-agent && \
     apt-get --yes clean && \
     rm -rf /var/lib/apt/lists/*
-RUN curl -fsSL -O https://github.com/curl/curl/releases/download/curl-8_3_0/curl-8.3.0.tar.gz
-RUN curl -fsSL -O https://github.com/curl/curl/releases/download/curl-8_3_0/curl-8.3.0.tar.gz.asc
+RUN curl -fsSL -O https://github.com/curl/curl/releases/download/curl-8_4_0/curl-8.4.0.tar.gz
+RUN curl -fsSL -O https://github.com/curl/curl/releases/download/curl-8_4_0/curl-8.4.0.tar.gz.asc
 RUN gpg --keyserver 'hkps://keyserver.ubuntu.com' --recv-keys '27EDEAF22F3ABCEB50DB9A125CC908FDB71E12C2'
-RUN gpg --verify curl-8.3.0.tar.gz.asc curl-8.3.0.tar.gz
-RUN mkdir -p /usr/src && tar -C /usr/src -xf curl-8.3.0.tar.gz
-WORKDIR /usr/src/curl-8.3.0
+RUN gpg --verify curl-8.4.0.tar.gz.asc curl-8.4.0.tar.gz
+RUN mkdir -p /usr/src && tar -C /usr/src -xf curl-8.4.0.tar.gz
+WORKDIR /usr/src/curl-8.4.0
 # x86_64-linux-gnu
 FROM curl-downloader AS curl-build-amd64
 RUN cmake ${CMAKE_ARGS_AMD64} -DCMAKE_INSTALL_LIBDIR=lib/x86_64-linux-gnu -DCMAKE_INSTALL_BINDIR=bin/x86_64-linux-gnu -DCMAKE_INSTALL_INCLUDEDIR=include/x86_64-linux-gnu -DCURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt -DBUILD_SHARED_LIBS=NO -DBUILD_CURL_EXE=NO
@@ -457,9 +457,9 @@ COPY --from=mosquitto-build-armhf /usr/local/lib /usr/local/lib
 FROM stage-2 AS cpr-downloader
 COPY --from=external-curl /usr/local/ /usr/local/
 COPY --from=external-zlib /usr/local/ /usr/local/
-RUN curl -fsSL -O https://github.com/libcpr/cpr/archive/refs/tags/1.10.4.tar.gz
-RUN mkdir -p /usr/src && tar -C /usr/src -xf 1.10.4.tar.gz
-WORKDIR /usr/src/cpr-1.10.4
+RUN curl -fsSL -O https://github.com/libcpr/cpr/archive/refs/tags/1.10.5.tar.gz
+RUN mkdir -p /usr/src && tar -C /usr/src -xf 1.10.5.tar.gz
+WORKDIR /usr/src/cpr-1.10.5
 # x86_64-linux-gnu
 FROM cpr-downloader AS cpr-build-amd64
 RUN cmake ${CMAKE_ARGS_AMD64} -DCPR_BUILD_TESTS=NO -DCPR_USE_SYSTEM_CURL=YES -DBUILD_SHARED_LIBS=NO
@@ -486,7 +486,7 @@ COPY --from=cpr-build-armhf /usr/local/lib /usr/local/lib
 
 FROM stage-1 AS docker-downloader
 
-RUN curl -fsSL --output - https://download.docker.com/linux/static/stable/x86_64/docker-24.0.6.tgz |\
+RUN curl -fsSL --output - https://download.docker.com/linux/static/stable/x86_64/docker-24.0.7.tgz |\
     tar -C /usr/local/bin --strip-components=1 -xzf - docker/docker && \
     chown root:root /usr/local/bin/docker
 
