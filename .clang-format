@@ -81,7 +81,7 @@ BreakBeforeBraces: Custom
 BreakConstructorInitializers: BeforeComma
 #BreakInheritanceList: BeforeColon
 #BreakStringLiterals: true
-ColumnLimit: 100
+ColumnLimit: 110
 #CommentPragmas:  '^ IWYU pragma:'
 #CompactNamespaces: false
 ConstructorInitializerAllOnOneLineOrOnePerLine: false
