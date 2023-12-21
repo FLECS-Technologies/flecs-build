@@ -62,14 +62,14 @@ RUN apt-get update && \
 # Boost ------------------------------------------------------------------------
 FROM stage-1 AS external-boost
 
-RUN curl -fsSL -O https://boostorg.jfrog.io/artifactory/main/release/1.83.0/source/boost_1_83_0.tar.gz
+RUN curl -fsSL -O https://boostorg.jfrog.io/artifactory/main/release/1.84.0/source/boost_1_84_0.tar.gz
 
 RUN mkdir -p /usr/local/include/x86_64-linux-gnu && \
-    tar -C /usr/local/include/x86_64-linux-gnu -xf boost_1_83_0.tar.gz --strip-components 1 \
-    boost_1_83_0/boost
+    tar -C /usr/local/include/x86_64-linux-gnu -xf boost_1_84_0.tar.gz --strip-components 1 \
+    boost_1_84_0/boost
 RUN mkdir -p /usr/local/share/doc/boost && \
-    tar -C /usr/local/share/doc/boost -xf boost_1_83_0.tar.gz --strip-components 1 \
-    boost_1_83_0/LICENSE_1_0.txt
+    tar -C /usr/local/share/doc/boost -xf boost_1_84_0.tar.gz --strip-components 1 \
+    boost_1_84_0/LICENSE_1_0.txt
 RUN mkdir -p /usr/local/include/arm-linux-gnueabihf && ln -s /usr/local/include/x86_64-linux-gnu/boost /usr/local/include/arm-linux-gnueabihf/boost
 RUN mkdir -p /usr/local/include/aarch64-linux-gnu && ln -s /usr/local/include/x86_64-linux-gnu/boost /usr/local/include/aarch64-linux-gnu/boost
 
@@ -346,12 +346,12 @@ RUN apt-get update && \
     dirmngr gpg gpg-agent && \
     apt-get --yes clean && \
     rm -rf /var/lib/apt/lists/*
-RUN curl -fsSL -O https://github.com/curl/curl/releases/download/curl-8_4_0/curl-8.4.0.tar.gz
-RUN curl -fsSL -O https://github.com/curl/curl/releases/download/curl-8_4_0/curl-8.4.0.tar.gz.asc
+RUN curl -fsSL -O https://github.com/curl/curl/releases/download/curl-8_5_0/curl-8.5.0.tar.gz
+RUN curl -fsSL -O https://github.com/curl/curl/releases/download/curl-8_5_0/curl-8.5.0.tar.gz.asc
 RUN gpg --keyserver 'hkps://keyserver.ubuntu.com' --recv-keys '27EDEAF22F3ABCEB50DB9A125CC908FDB71E12C2'
-RUN gpg --verify curl-8.4.0.tar.gz.asc curl-8.4.0.tar.gz
-RUN mkdir -p /usr/src && tar -C /usr/src -xf curl-8.4.0.tar.gz
-WORKDIR /usr/src/curl-8.4.0
+RUN gpg --verify curl-8.5.0.tar.gz.asc curl-8.5.0.tar.gz
+RUN mkdir -p /usr/src && tar -C /usr/src -xf curl-8.5.0.tar.gz
+WORKDIR /usr/src/curl-8.5.0
 # x86_64-linux-gnu
 FROM curl-downloader AS curl-build-amd64
 RUN cmake ${CMAKE_ARGS_AMD64} -DCMAKE_INSTALL_LIBDIR=lib/x86_64-linux-gnu -DCMAKE_INSTALL_BINDIR=bin/x86_64-linux-gnu -DCMAKE_INSTALL_INCLUDEDIR=include/x86_64-linux-gnu -DCURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt -DBUILD_SHARED_LIBS=NO -DBUILD_CURL_EXE=NO
