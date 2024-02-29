@@ -511,6 +511,6 @@ COPY --from=external-mosquitto /usr/local/ /usr/local/
 # Stage 3
 COPY --from=external-cpr /usr/local/ /usr/local/
 # Run ldconfig
-RUN ldconfig
+RUN echo "/lib/x86_64-linux-gnu\n/usr/lib/x86_64-linux-gnu\n/usr/local/lib/x86_64-linux-gnu" >/etc/ld.so.conf.d/x86_64-linux-gnu.conf && ldconfig
 # Docker
 COPY --from=docker-downloader /usr/local/bin/docker /usr/local/bin
