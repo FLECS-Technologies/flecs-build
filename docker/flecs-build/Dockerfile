@@ -333,6 +333,8 @@ COPY --from=zlib-build-armhf /usr/local/lib /usr/local/lib
 # Stage 2 dependencies / dependent on stage 1 libs (mainly OpenSSL)
 FROM stage-1 AS stage-2
 COPY --from=external-openssl /usr/local/ /usr/local/
+FROM stage-1-make AS stage-2-make
+COPY --from=external-openssl /usr/local/ /usr/local/
 # curl -------------------------------------------------------------------------
 FROM stage-2 AS curl-downloader
 COPY --from=external-zlib /usr/local/ /usr/local/
@@ -378,7 +380,7 @@ COPY --from=curl-build-arm64 /usr/local/bin/ /usr/local/bin/
 COPY --from=curl-build-armhf /usr/local/bin/ /usr/local/bin/
 
 # libarchive -------------------------------------------------------------------
-FROM stage-2 AS libarchive-downloader
+FROM stage-2-make AS libarchive-downloader
 RUN apt-get update && \
     apt-get --yes --no-install-recommends install \
     dirmngr gpg gpg-agent && \
@@ -392,30 +394,24 @@ RUN mkdir -p /usr/src && tar -C /usr/src -xf libarchive-3.7.2.tar.gz
 WORKDIR /usr/src/libarchive-3.7.2
 # x86_64-linux-gnu
 FROM libarchive-downloader AS libarchive-build-amd64
-RUN cmake ${CMAKE_ARGS_AMD64} -DENABLE_LIBXML2=OFF -DENABLE_EXPAT=OFF
-RUN cmake --build build/
-RUN cmake --install build/
-RUN find /usr/local/ -name "libarchive.a" -exec rm {} \;
+RUN ./configure --prefix=/usr/local --includedir=/usr/local/include/x86_64-linux-gnu --libdir=/usr/local/lib/x86_64-linux-gnu --host=x86_64-linux-gnu --enable-static=no --without-expat --without-xml2
+RUN make -j16 all && make install-strip
 # aarch64-linux-gnu
 FROM libarchive-downloader AS libarchive-build-arm64
-RUN cmake ${CMAKE_ARGS_ARM64} -DENABLE_LIBXML2=OFF -DENABLE_EXPAT=OFF
-RUN cmake --build build/
-RUN cmake --install build/
-RUN find /usr/local/ -name "libarchive.a" -exec rm {} \;
+RUN ./configure --prefix=/usr/local --includedir=/usr/local/include/aarch64-linux-gnu --libdir=/usr/local/lib/aarch64-linux-gnu --host=aarch64-linux-gnu  --enable-static=no --without-expat --without-xml2
+RUN make -j16 all && make install-strip
 # arm-linux-gnueabihf
 FROM libarchive-downloader AS libarchive-build-armhf
-RUN cmake ${CMAKE_ARGS_ARMHF} -DENABLE_LIBXML2=OFF -DENABLE_EXPAT=OFF
-RUN cmake --build build/
-RUN cmake --install build/
-RUN find /usr/local/ -name "libarchive.a" -exec rm {} \;
+RUN ./configure --prefix=/usr/local --includedir=/usr/local/include/arm-linux-gnueabihf --libdir=/usr/local/lib/arm-linux-gnueabihf --host=arm-linux-gnueabihf  --enable-static=no --without-expat --without-xml2
+RUN make -j16 all && make install-strip
 # install
 FROM stage-1 AS external-libarchive
-COPY --from=libarchive-build-amd64 /usr/local/include/*.h /usr/local/include/x86_64-linux-gnu/
-COPY --from=libarchive-build-arm64 /usr/local/include/*.h /usr/local/include/aarch64-linux-gnu/
-COPY --from=libarchive-build-armhf /usr/local/include/*.h /usr/local/include/arm-linux-gnueabihf/
-COPY --from=libarchive-build-amd64 /usr/local/lib/*.so* /usr/local/lib/x86_64-linux-gnu/
-COPY --from=libarchive-build-arm64 /usr/local/lib/*.so* /usr/local/lib/aarch64-linux-gnu/
-COPY --from=libarchive-build-armhf /usr/local/lib/*.so* /usr/local/lib/arm-linux-gnueabihf/
+COPY --from=libarchive-build-amd64 /usr/local/include /usr/local/include
+COPY --from=libarchive-build-arm64 /usr/local/include /usr/local/include
+COPY --from=libarchive-build-armhf /usr/local/include /usr/local/include
+COPY --from=libarchive-build-amd64 /usr/local/lib /usr/local/lib
+COPY --from=libarchive-build-arm64 /usr/local/lib /usr/local/lib
+COPY --from=libarchive-build-armhf /usr/local/lib /usr/local/lib
 
 # mosquitto --------------------------------------------------------------------
 FROM stage-2 AS mosquitto-downloader
