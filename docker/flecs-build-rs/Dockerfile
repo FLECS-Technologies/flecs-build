@@ -20,7 +20,7 @@ RUN dpkg --add-architecture armhf
 # Install necessary packages
 RUN apt-get update && \
     apt-get --yes --no-install-recommends install \
-    cmake g++ g++-arm-linux-gnueabihf g++-aarch64-linux-gnu git ninja-build && \
+    cmake g++ g++-arm-linux-gnueabihf g++-aarch64-linux-gnu git make && \
     apt-get --yes clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -28,12 +28,8 @@ RUN git config --system --add safe.directory "*"
 
 RUN git clone https://github.com/FLECS-Technologies/flecs-build.git /usr/src/flecs-build
 
-# cargo-semver-checks (or its dependencies) require make for installation
-RUN apt-get update && \
-    apt-get --yes --no-install-recommends install \
-    make && \
-    apt-get --yes clean && \
-    rm -rf /var/lib/apt/lists/*
+# Copy cargo config to home directory of root, it contains configuration of linker and RUSTFLAGS for different targets
+ADD config.toml /root/.cargo/
 
 # Cargo components
 RUN rustup component add rustfmt
@@ -50,16 +46,10 @@ RUN cargo install cargo-semver-checks --locked --version 0.29.1
 RUN cargo install cargo-audit --locked --version 0.20.0
 
 # x86_64-linux-gnu
-FROM flecs-build-rs AS flecs-build-rs-amd64
-ENV RUSTFLAGS="-Clinker=x86_64-linux-gnu-gcc -Car=x86_64-linux-gnu-ar"
 RUN rustup target add x86_64-unknown-linux-gnu
 
 # aarch64-linux-gnu
-FROM flecs-build-rs AS flecs-build-rs-arm64
-ENV RUSTFLAGS="-Clinker=aarch64-linux-gnu-gcc -Car=aarch64-linux-gnu-ar"
 RUN rustup target add aarch64-unknown-linux-gnu
 
 # arm-linux-gnueabihf
-FROM flecs-build-rs AS flecs-build-rs-armhf
-ENV RUSTFLAGS="-Clinker=arm-linux-gnueabihf-gcc -Car=arm-linux-gnueabihf-ar"
 RUN rustup target add armv7-unknown-linux-gnueabihf
