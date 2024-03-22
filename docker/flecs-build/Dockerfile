@@ -59,6 +59,33 @@ RUN apt-get update && \
 
 # ------------------------------------------------------------------------------
 # Stage 1 dependencies / self-contained
+# Asio ------------------------------------------------------------------------
+FROM stage-1-make as asio-downloader
+
+RUN curl -o asio-1.28.0.tar.gz -fsSL https://sourceforge.net/projects/asio/files/asio/1.28.0%20%28Stable%29/asio-1.28.0.tar.gz/download
+RUN mkdir -p /usr/src && tar -C /usr/src -xf asio-1.28.0.tar.gz
+WORKDIR /usr/src/asio-1.28.0
+ENV CXXFLAGS="-std=c++20"
+# x86_64-linux-gnu
+FROM asio-downloader AS asio-build-amd64
+RUN ./configure --prefix=/usr/local --includedir=/usr/local/include/x86_64-linux-gnu --libdir=/usr/local/lib/x86_64-linux-gnu --host=x86_64-linux-gnu
+RUN make install-data
+# aarch64-linux-gnu
+FROM asio-downloader AS asio-build-arm64
+RUN ./configure --prefix=/usr/local --includedir=/usr/local/include/aarch64-linux-gnu --libdir=/usr/local/lib/aarch64-linux-gnu --host=aarch64-linux-gnu
+RUN make install-data
+# arm-linux-gnueabihf
+FROM asio-downloader AS asio-build-armhf
+RUN ./configure --prefix=/usr/local --includedir=/usr/local/include/arm-linux-gnueabihf --libdir=/usr/local/lib/arm-linux-gnueabihf --host=arm-linux-gnueabihf
+RUN make install-data
+FROM stage-1 AS external-asio
+COPY --from=asio-build-amd64 /usr/local/include /usr/local/include
+COPY --from=asio-build-arm64 /usr/local/include /usr/local/include
+COPY --from=asio-build-armhf /usr/local/include /usr/local/include
+COPY --from=asio-build-amd64 /usr/local/lib /usr/local/lib
+COPY --from=asio-build-arm64 /usr/local/lib /usr/local/lib
+COPY --from=asio-build-armhf /usr/local/lib /usr/local/lib
+
 # Boost ------------------------------------------------------------------------
 FROM stage-1 AS external-boost
 
@@ -254,30 +281,30 @@ COPY --from=yaml-cpp-build-armhf /usr/local/lib /usr/local/lib
 # zenoh-c
 FROM stage-1 AS zenoh-c-downloader
 SHELL ["/bin/bash", "-c"]
-RUN (curl -sSf https://sh.rustup.rs | bash -s -- -y)
+RUN (curl -sSf https://sh.rustup.rs | bash -s -- -y --default-toolchain 1.76.0-x86_64-unknown-linux-gnu)
 ENV PATH="${PATH}:/root/.cargo/bin"
-RUN curl -fsSL -O https://github.com/eclipse-zenoh/zenoh-c/archive/refs/tags/0.10.0-rc.tar.gz
-RUN mkdir -p /usr/src && tar -C /usr/src -xf 0.10.0-rc.tar.gz
-WORKDIR /usr/src/zenoh-c-0.10.0-rc
+RUN curl -fsSL -O https://github.com/eclipse-zenoh/zenoh-c/archive/refs/tags/0.10.1-rc.tar.gz
+RUN mkdir -p /usr/src && tar -C /usr/src -xf 0.10.1-rc.tar.gz
+WORKDIR /usr/src/zenoh-c-0.10.1-rc
 # x86_64-linux-gnu
 FROM zenoh-c-downloader AS zenoh-c-build-amd64
 ENV RUSTFLAGS="-Clinker=x86_64-linux-gnu-gcc -Car=x86_64-linux-gnu-ar"
-RUN rustup target add --toolchain stable x86_64-unknown-linux-gnu
-RUN cmake ${CMAKE_ARGS_AMD64} -DZENOHC_CUSTOM_TARGET="x86_64-unknown-linux-gnu"
+RUN rustup target add --toolchain 1.76.0 x86_64-unknown-linux-gnu
+RUN cmake ${CMAKE_ARGS_AMD64} -DZENOHC_CARGO_CHANNEL="1.76.0" -DZENOHC_CUSTOM_TARGET="x86_64-unknown-linux-gnu"
 RUN cmake --build build/
 RUN cmake --install build/
 # aarch64-linux-gnu
 FROM zenoh-c-downloader AS zenoh-c-build-arm64
 ENV RUSTFLAGS="-Clinker=aarch64-linux-gnu-gcc -Car=aarch64-linux-gnu-ar"
-RUN rustup target add --toolchain stable aarch64-unknown-linux-gnu
-RUN cmake ${CMAKE_ARGS_ARM64} -DZENOHC_CUSTOM_TARGET="aarch64-unknown-linux-gnu"
+RUN rustup target add --toolchain 1.76.0 aarch64-unknown-linux-gnu
+RUN cmake ${CMAKE_ARGS_ARM64} -DZENOHC_CARGO_CHANNEL="1.76.0" -DZENOHC_CUSTOM_TARGET="aarch64-unknown-linux-gnu"
 RUN cmake --build build/
 RUN cmake --install build/
 # arm-linux-gnueabihf
 FROM zenoh-c-downloader AS zenoh-c-build-armhf
 ENV RUSTFLAGS="-Clinker=arm-linux-gnueabihf-gcc -Car=arm-linux-gnueabihf-ar"
-RUN rustup target add --toolchain stable armv7-unknown-linux-gnueabihf
-RUN cmake ${CMAKE_ARGS_ARMHF} -DZENOHC_CUSTOM_TARGET="armv7-unknown-linux-gnueabihf"
+RUN rustup target add --toolchain 1.76.0 armv7-unknown-linux-gnueabihf
+RUN cmake ${CMAKE_ARGS_ARMHF} -DZENOHC_CARGO_CHANNEL="1.76.0" -DZENOHC_CUSTOM_TARGET="armv7-unknown-linux-gnueabihf"
 RUN cmake --build build/
 RUN cmake --install build/
 # install
@@ -418,19 +445,20 @@ FROM stage-2 AS mosquitto-downloader
 RUN curl -fsSL -O https://github.com/eclipse/mosquitto/archive/refs/tags/v2.0.18.tar.gz
 RUN mkdir -p /usr/src && tar -C /usr/src -xf v2.0.18.tar.gz
 WORKDIR /usr/src/mosquitto-2.0.18
+ENV CMAKE_ARGS_MOSQUITTO="-DDOCUMENTATION=NO -DWITH_STATIC_LIBRARIES=NO -DWITH_PIC=YES -DWITH_APPS=NO -DWITH_BROKER=NO -DWITH_CLIENTS=NO -DWITH_PLUGINS=NO -DWITH_LIB_CPP=NO"
 # x86_64-linux-gnu
 FROM mosquitto-downloader AS mosquitto-build-amd64
-RUN cmake ${CMAKE_ARGS_AMD64} -DDOCUMENTATION=NO -DWITH_STATIC_LIBRARIES=NO -DWITH_PIC=YES -DWITH_APPS=NO -DWITH_BROKER=NO -DWITH_CLIENTS=NO -DWITH_PLUGINS=NO -DWITH_LIB_CPP=NO
+RUN cmake ${CMAKE_ARGS_AMD64} ${CMAKE_ARGS_MOSQUITTO}
 RUN cmake --build build/
 RUN cmake --install build/
 # aarch64-linux-gnu
 FROM mosquitto-downloader AS mosquitto-build-arm64
-RUN cmake ${CMAKE_ARGS_ARM64} -DDOCUMENTATION=NO -DWITH_STATIC_LIBRARIES=NO -DWITH_PIC=YES -DWITH_APPS=NO -DWITH_BROKER=NO -DWITH_CLIENTS=NO -DWITH_PLUGINS=NO -DWITH_LIB_CPP=NO
+RUN cmake ${CMAKE_ARGS_ARM64} ${CMAKE_ARGS_MOSQUITTO}
 RUN cmake --build build/
 RUN cmake --install build/
 # arm-linux-gnueabihf
 FROM mosquitto-downloader AS mosquitto-build-armhf
-RUN cmake ${CMAKE_ARGS_ARMHF} -DDOCUMENTATION=NO -DWITH_STATIC_LIBRARIES=NO -DWITH_PIC=YES -DWITH_APPS=NO -DWITH_BROKER=NO -DWITH_CLIENTS=NO -DWITH_PLUGINS=NO -DWITH_LIB_CPP=NO
+RUN cmake ${CMAKE_ARGS_ARMHF} ${CMAKE_ARGS_MOSQUITTO}
 RUN cmake --build build/
 RUN cmake --install build/
 # install
@@ -451,19 +479,20 @@ COPY --from=external-zlib /usr/local/ /usr/local/
 RUN curl -fsSL -O https://github.com/libcpr/cpr/archive/refs/tags/1.10.5.tar.gz
 RUN mkdir -p /usr/src && tar -C /usr/src -xf 1.10.5.tar.gz
 WORKDIR /usr/src/cpr-1.10.5
+ENV CMAKE_ARGS_CPR="-DCPR_BUILD_TESTS=NO -DCPR_USE_SYSTEM_CURL=YES"
 # x86_64-linux-gnu
 FROM cpr-downloader AS cpr-build-amd64
-RUN cmake ${CMAKE_ARGS_AMD64} -DCPR_BUILD_TESTS=NO -DCPR_USE_SYSTEM_CURL=YES
+RUN cmake ${CMAKE_ARGS_AMD64} ${CMAKE_ARGS_CPR}
 RUN cmake --build build/
 RUN cmake --install build/
 # aarch64-linux-gnu
 FROM cpr-downloader AS cpr-build-arm64
-RUN cmake ${CMAKE_ARGS_ARM64} -DCPR_BUILD_TESTS=NO -DCPR_USE_SYSTEM_CURL=YES
+RUN cmake ${CMAKE_ARGS_ARM64} ${CMAKE_ARGS_CPR}
 RUN cmake --build build/
 RUN cmake --install build/
 # arm-linux-gnueabihf
 FROM cpr-downloader AS cpr-build-armhf
-RUN cmake ${CMAKE_ARGS_ARMHF} -DCPR_BUILD_TESTS=NO -DCPR_USE_SYSTEM_CURL=YES
+RUN cmake ${CMAKE_ARGS_ARMHF} ${CMAKE_ARGS_CPR}
 RUN cmake --build build/
 RUN cmake --install build/
 # install
@@ -477,7 +506,7 @@ COPY --from=cpr-build-armhf /usr/local/lib /usr/local/lib
 
 FROM stage-1 AS docker-downloader
 
-RUN curl -fsSL --output - https://download.docker.com/linux/static/stable/x86_64/docker-25.0.3.tgz |\
+RUN curl -fsSL --output - https://download.docker.com/linux/static/stable/x86_64/docker-26.0.0.tgz |\
     tar -C /usr/local/bin --strip-components=1 -xzf - docker/docker && \
     chown root:root /usr/local/bin/docker
 
@@ -491,7 +520,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p ~/.docker/cli-plugins && \
-    curl -L -o ~/.docker/cli-plugins/docker-buildx https://github.com/docker/buildx/releases/download/v0.12.1/buildx-v0.12.1.linux-amd64 &&\
+    curl -L -o ~/.docker/cli-plugins/docker-buildx https://github.com/docker/buildx/releases/download/v0.13.1/buildx-v0.13.1.linux-amd64 &&\
     chmod a+x ~/.docker/cli-plugins/docker-buildx
 
 # Stage 1
