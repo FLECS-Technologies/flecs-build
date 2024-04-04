@@ -21,10 +21,7 @@ if(NOT FLECS_BUILD_INCLUDED)
 
     set(FLECS_BUILD_INCLUDED True)
 
-    set(CMAKE_MODULE_PATH
-        ${CMAKE_MODULE_PATH}
-        ${CMAKE_CURRENT_LIST_DIR}/modules
-    )
+    list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/modules")
 
     # set default CXX flags
     set(CMAKE_CXX_STANDARD 20)
@@ -102,6 +99,20 @@ if(NOT FLECS_BUILD_INCLUDED)
             set(CMAKE_C_COMPILER_LAUNCHER ccache)
             set(CMAKE_CXX_COMPILER_LAUNCHER ccache)
         endif()
+    endif()
+
+    # compiler flags and definitions for building unit tests
+    set(FLECS_BUILD_TESTS OFF CACHE BOOL "Enable to build FLECS unit tests")
+    if(FLECS_BUILD_TESTS)
+        add_compile_options(-fprofile-arcs -ftest-coverage)
+        add_link_options(-lgcov --coverage)
+        add_definitions(-DFLECS_UNIT_TEST)
+        add_definitions(-DFLECS_CONSTEXPR_UNLESS_TESTED=)
+        add_definitions(-DFLECS_FINAL_UNLESS_TESTED=)
+        set(FLECS_NEED_GTEST TRUE)
+    else()
+        add_definitions(-DFLECS_CONSTEXPR_UNLESS_TESTED=constexpr)
+        add_definitions(-DFLECS_FINAL_UNLESS_TESTED=final)
     endif()
 
     add_custom_target(
