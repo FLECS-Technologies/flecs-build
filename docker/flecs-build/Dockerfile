@@ -515,7 +515,7 @@ FROM stage-1 AS flecs-build
 # additional packages required for building and running tests
 RUN apt-get update && \
     apt-get --yes --no-install-recommends install \
-    fakeroot gcovr pkg-config pkg-config:armhf pkg-config:arm64 udev && \
+    fakeroot gcovr udev && \
     apt-get --yes clean && \
     rm -rf /var/lib/apt/lists/*
 
