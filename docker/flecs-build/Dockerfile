@@ -524,6 +524,7 @@ RUN mkdir -p ~/.docker/cli-plugins && \
     chmod a+x ~/.docker/cli-plugins/docker-buildx
 
 # Stage 1
+COPY --from=external-asio /usr/local/ /usr/local/
 COPY --from=external-boost /usr/local/ /usr/local/
 COPY --from=external-crow /usr/local/ /usr/local/
 COPY --from=external-googletest /usr/local/ /usr/local/
