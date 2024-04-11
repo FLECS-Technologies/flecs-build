@@ -12,19 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# provide rules for custom CMake modules
-# docker
 get_property(DOCKER_IMAGES GLOBAL PROPERTY DOCKER_IMAGES)
 add_custom_target(
     docker
     DEPENDS ${DOCKER_IMAGES}
     COMMAND echo ${DOCKER_IMAGES}
-)
-
-# packages
-get_property(PACKAGES GLOBAL PROPERTY PACKAGES)
-add_custom_target(
-    packages
-    DEPENDS ${PACKAGES}
-    COMMAND echo ${PACKAGES}
 )
