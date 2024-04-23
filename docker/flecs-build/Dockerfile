@@ -19,6 +19,7 @@
 #   - CMake / Ninja
 #   - cross-platform compilers
 #   - flecs-build repository providing common CMake modules
+#   - rustup with toolchains for cross-compiling
 FROM debian:bookworm-slim AS stage-1
 
 RUN dpkg --add-architecture arm64
@@ -26,11 +27,17 @@ RUN dpkg --add-architecture armhf
 
 RUN apt-get update && \
     apt-get --yes --no-install-recommends install \
-    ca-certificates curl cmake g++ g++-arm-linux-gnueabihf g++-aarch64-linux-gnu git libudev-dev libudev-dev:arm64 libudev-dev:armhf ninja-build && \
+    ca-certificates curl cmake g++ g++-arm-linux-gnueabihf g++-aarch64-linux-gnu git libudev-dev libudev-dev:arm64 libudev-dev:armhf ninja-build pkg-config && \
     apt-get --yes clean && \
     rm -rf /var/lib/apt/lists/*
 
 RUN git config --system --add safe.directory "*"
+
+RUN (curl -sSf https://sh.rustup.rs | bash -s -- -y --default-toolchain 1.76.0-x86_64-unknown-linux-gnu)
+ENV PATH="${PATH}:/root/.cargo/bin"
+RUN rustup target add --toolchain 1.76.0 x86_64-unknown-linux-gnu
+RUN rustup target add --toolchain 1.76.0 aarch64-unknown-linux-gnu
+RUN rustup target add --toolchain 1.76.0 armv7-unknown-linux-gnueabihf
 
 RUN git clone https://github.com/FLECS-Technologies/flecs-build.git /usr/src/flecs-build
 
@@ -281,29 +288,24 @@ COPY --from=yaml-cpp-build-armhf /usr/local/lib /usr/local/lib
 # zenoh-c
 FROM stage-1 AS zenoh-c-downloader
 SHELL ["/bin/bash", "-c"]
-RUN (curl -sSf https://sh.rustup.rs | bash -s -- -y --default-toolchain 1.76.0-x86_64-unknown-linux-gnu)
-ENV PATH="${PATH}:/root/.cargo/bin"
 RUN curl -fsSL -O https://github.com/eclipse-zenoh/zenoh-c/archive/refs/tags/0.10.1-rc.tar.gz
 RUN mkdir -p /usr/src && tar -C /usr/src -xf 0.10.1-rc.tar.gz
 WORKDIR /usr/src/zenoh-c-0.10.1-rc
 # x86_64-linux-gnu
 FROM zenoh-c-downloader AS zenoh-c-build-amd64
 ENV RUSTFLAGS="-Clinker=x86_64-linux-gnu-gcc -Car=x86_64-linux-gnu-ar"
-RUN rustup target add --toolchain 1.76.0 x86_64-unknown-linux-gnu
 RUN cmake ${CMAKE_ARGS_AMD64} -DZENOHC_CARGO_CHANNEL="1.76.0" -DZENOHC_CUSTOM_TARGET="x86_64-unknown-linux-gnu"
 RUN cmake --build build/
 RUN cmake --install build/
 # aarch64-linux-gnu
 FROM zenoh-c-downloader AS zenoh-c-build-arm64
 ENV RUSTFLAGS="-Clinker=aarch64-linux-gnu-gcc -Car=aarch64-linux-gnu-ar"
-RUN rustup target add --toolchain 1.76.0 aarch64-unknown-linux-gnu
 RUN cmake ${CMAKE_ARGS_ARM64} -DZENOHC_CARGO_CHANNEL="1.76.0" -DZENOHC_CUSTOM_TARGET="aarch64-unknown-linux-gnu"
 RUN cmake --build build/
 RUN cmake --install build/
 # arm-linux-gnueabihf
 FROM zenoh-c-downloader AS zenoh-c-build-armhf
 ENV RUSTFLAGS="-Clinker=arm-linux-gnueabihf-gcc -Car=arm-linux-gnueabihf-ar"
-RUN rustup target add --toolchain 1.76.0 armv7-unknown-linux-gnueabihf
 RUN cmake ${CMAKE_ARGS_ARMHF} -DZENOHC_CARGO_CHANNEL="1.76.0" -DZENOHC_CUSTOM_TARGET="armv7-unknown-linux-gnueabihf"
 RUN cmake --build build/
 RUN cmake --install build/
