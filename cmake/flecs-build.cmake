@@ -34,6 +34,12 @@ if(NOT FLECS_BUILD_INCLUDED)
     set(CMAKE_CXX_VISIBILITY_PRESET hidden)
     add_link_options(-Wl,--exclude-libs,ALL)
 
+    # Temporary solution for linking flecs unit test libraries with flecs-core-rs
+    # Problem: Order of objects while linkings is "wrong". libssl.so and libcrypto.sl are "left of" libflecs_core_rs.a
+    # without this flag the compiler ignores the DT_NEEDED tags and the necessary symbols are not found/linked
+    # TODO: Find better solution
+    add_link_options(-Wl,--copy-dt-needed-entries)
+
     # provide macro to export symbols
     add_definitions("-DFLECS_EXPORT=__attribute__((visibility(\"default\")))")
 
