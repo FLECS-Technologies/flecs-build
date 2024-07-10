@@ -72,9 +72,9 @@ RUN apt-get update && \
 # Asio ------------------------------------------------------------------------
 FROM stage-1-make AS asio-downloader
 
-RUN curl -o asio-1.28.0.tar.gz -fsSL https://sourceforge.net/projects/asio/files/asio/1.28.0%20%28Stable%29/asio-1.28.0.tar.gz/download
-RUN mkdir -p /usr/src && tar -C /usr/src -xf asio-1.28.0.tar.gz
-WORKDIR /usr/src/asio-1.28.0
+RUN curl -o asio-1.30.2.tar.gz -fsSL https://sourceforge.net/projects/asio/files/asio/1.30.2%20%28Stable%29/asio-1.30.2.tar.gz/download
+RUN mkdir -p /usr/src && tar -C /usr/src -xf asio-1.30.2.tar.gz
+WORKDIR /usr/src/asio-1.30.2
 ENV CXXFLAGS="-std=c++20"
 # x86_64-linux-gnu
 FROM asio-downloader AS asio-build-amd64
@@ -225,11 +225,11 @@ COPY --from=libusb-build-armhf /usr/local/lib /usr/local/lib
 
 # OpenSSL ----------------------------------------------------------------------
 FROM stage-1-make AS openssl-downloader
-RUN curl -fsSL -O https://www.openssl.org/source/openssl-3.2.1.tar.gz
-RUN curl -fsSL -O https://www.openssl.org/source/openssl-3.2.1.tar.gz.sha256
-RUN echo "$(cat openssl-3.2.1.tar.gz.sha256) openssl-3.2.1.tar.gz" | sha256sum --check --status
-RUN mkdir -p /usr/src && tar -C /usr/src -xf openssl-3.2.1.tar.gz
-WORKDIR /usr/src/openssl-3.2.1
+RUN curl -fsSL -O https://www.openssl.org/source/openssl-3.3.1.tar.gz
+RUN curl -fsSL -O https://www.openssl.org/source/openssl-3.3.1.tar.gz.sha256
+RUN echo "$(cat openssl-3.3.1.tar.gz.sha256) openssl-3.3.1.tar.gz" | sha256sum --check --status
+RUN mkdir -p /usr/src && tar -C /usr/src -xf openssl-3.3.1.tar.gz
+WORKDIR /usr/src/openssl-3.3.1
 # x86_64-linux-gnu
 FROM openssl-downloader AS openssl-build-amd64
 RUN ./Configure linux-x86_64 --libdir=lib --cross-compile-prefix=x86_64-linux-gnu- --prefix=/usr/local shared
@@ -406,12 +406,12 @@ RUN apt-get update && \
     dirmngr gpg gpg-agent && \
     apt-get --yes clean && \
     rm -rf /var/lib/apt/lists/*
-RUN curl -fsSL -O https://github.com/curl/curl/releases/download/curl-8_6_0/curl-8.6.0.tar.gz
-RUN curl -fsSL -O https://github.com/curl/curl/releases/download/curl-8_6_0/curl-8.6.0.tar.gz.asc
+RUN curl -fsSL -O https://github.com/curl/curl/releases/download/curl-8_8_0/curl-8.8.0.tar.gz
+RUN curl -fsSL -O https://github.com/curl/curl/releases/download/curl-8_8_0/curl-8.8.0.tar.gz.asc
 RUN gpg --keyserver 'hkps://keyserver.ubuntu.com' --recv-keys '27EDEAF22F3ABCEB50DB9A125CC908FDB71E12C2'
-RUN gpg --verify curl-8.6.0.tar.gz.asc curl-8.6.0.tar.gz
-RUN mkdir -p /usr/src && tar -C /usr/src -xf curl-8.6.0.tar.gz
-WORKDIR /usr/src/curl-8.6.0
+RUN gpg --verify curl-8.8.0.tar.gz.asc curl-8.8.0.tar.gz
+RUN mkdir -p /usr/src && tar -C /usr/src -xf curl-8.8.0.tar.gz
+WORKDIR /usr/src/curl-8.8.0
 # x86_64-linux-gnu
 FROM curl-downloader AS curl-build-amd64
 RUN cmake ${CMAKE_ARGS_AMD64} -DCMAKE_INSTALL_LIBDIR=lib/x86_64-linux-gnu -DCMAKE_INSTALL_BINDIR=bin/x86_64-linux-gnu -DCMAKE_INSTALL_INCLUDEDIR=include/x86_64-linux-gnu -DCURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt -DBUILD_CURL_EXE=NO
@@ -449,12 +449,12 @@ RUN apt-get update && \
     dirmngr gpg gpg-agent && \
     apt-get --yes clean && \
     rm -rf /var/lib/apt/lists/*
-RUN curl -fsSL -O https://github.com/libarchive/libarchive/releases/download/v3.7.2/libarchive-3.7.2.tar.gz
-RUN curl -fsSL -O https://github.com/libarchive/libarchive/releases/download/v3.7.2/libarchive-3.7.2.tar.gz.asc
+RUN curl -fsSL -O https://github.com/libarchive/libarchive/releases/download/v3.7.4/libarchive-3.7.4.tar.gz
+RUN curl -fsSL -O https://github.com/libarchive/libarchive/releases/download/v3.7.4/libarchive-3.7.4.tar.gz.asc
 RUN gpg --keyserver 'hkps://keyserver.ubuntu.com' --recv-keys 'DB2C7CF1B4C265FAEF56E3FC5848A18B8F14184B'
-RUN gpg --verify libarchive-3.7.2.tar.gz.asc libarchive-3.7.2.tar.gz
-RUN mkdir -p /usr/src && tar -C /usr/src -xf libarchive-3.7.2.tar.gz
-WORKDIR /usr/src/libarchive-3.7.2
+RUN gpg --verify libarchive-3.7.4.tar.gz.asc libarchive-3.7.4.tar.gz
+RUN mkdir -p /usr/src && tar -C /usr/src -xf libarchive-3.7.4.tar.gz
+WORKDIR /usr/src/libarchive-3.7.4
 # x86_64-linux-gnu
 FROM libarchive-downloader AS libarchive-build-amd64
 RUN ./configure --prefix=/usr/local --includedir=/usr/local/include/x86_64-linux-gnu --libdir=/usr/local/lib/x86_64-linux-gnu --host=x86_64-linux-gnu --enable-static=no --without-expat --without-xml2
@@ -542,7 +542,7 @@ COPY --from=cpr-build-armhf /usr/local/lib /usr/local/lib
 
 FROM stage-1 AS docker-downloader
 
-RUN curl -fsSL --output - https://download.docker.com/linux/static/stable/x86_64/docker-26.0.0.tgz |\
+RUN curl -fsSL --output - https://download.docker.com/linux/static/stable/x86_64/docker-27.0.3.tgz |\
     tar -C /usr/local/bin --strip-components=1 -xzf - docker/docker && \
     chown root:root /usr/local/bin/docker
 
@@ -556,7 +556,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p ~/.docker/cli-plugins && \
-    curl -L -o ~/.docker/cli-plugins/docker-buildx https://github.com/docker/buildx/releases/download/v0.13.1/buildx-v0.13.1.linux-amd64 &&\
+    curl -L -o ~/.docker/cli-plugins/docker-buildx https://github.com/docker/buildx/releases/download/v0.15.1/buildx-v0.15.1.linux-amd64 &&\
     chmod a+x ~/.docker/cli-plugins/docker-buildx
 
 # Stage 1
