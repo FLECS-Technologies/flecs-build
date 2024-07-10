@@ -70,7 +70,7 @@ RUN apt-get update && \
 # ------------------------------------------------------------------------------
 # Stage 1 dependencies / self-contained
 # Asio ------------------------------------------------------------------------
-FROM stage-1-make as asio-downloader
+FROM stage-1-make AS asio-downloader
 
 RUN curl -o asio-1.28.0.tar.gz -fsSL https://sourceforge.net/projects/asio/files/asio/1.28.0%20%28Stable%29/asio-1.28.0.tar.gz/download
 RUN mkdir -p /usr/src && tar -C /usr/src -xf asio-1.28.0.tar.gz
@@ -97,35 +97,33 @@ COPY --from=asio-build-arm64 /usr/local/lib /usr/local/lib
 COPY --from=asio-build-armhf /usr/local/lib /usr/local/lib
 
 # Boost ------------------------------------------------------------------------
+FROM stage-1 AS boost-downloader
+RUN curl -fsSL -O https://boostorg.jfrog.io/artifactory/main/release/1.85.0/source/boost_1_85_0.tar.gz
+RUN mkdir -p /usr/src && tar -C /usr/src -xf boost_1_85_0.tar.gz
+WORKDIR /usr/src/boost_1_85_0
+RUN echo "using gcc : amd64 : x86_64-linux-gnu-g++ ;" >>/root/user-config.jam
+RUN echo "using gcc : armhf : arm-linux-gnueabihf-g++ ;" >>/root/user-config.jam
+RUN echo "using gcc : arm64 : aarch64-linux-gnu-g++ ;" >>/root/user-config.jam
+RUN chmod a+x bootstrap.sh
+# x86_64-linux-gnu
+FROM boost-downloader AS boost-build-amd64
+RUN ./bootstrap.sh --prefix=/usr/local --includedir=/usr/local/include/x86_64-linux-gnu --libdir=/usr/local/lib/x86_64-linux-gnu
+RUN ./b2 boost.stacktrace.from_exception=off toolset=gcc-amd64 install
+# aarch64-linux-gnu
+FROM boost-downloader AS boost-build-arm64
+RUN ./bootstrap.sh --prefix=/usr/local --includedir=/usr/local/include/aarch64-linux-gnu --libdir=/usr/local/lib/aarch64-linux-gnu
+RUN ./b2 boost.stacktrace.from_exception=off toolset=gcc-arm64 install
+# arm-linux-gnueabihf
+FROM boost-downloader AS boost-build-armhf
+RUN ./bootstrap.sh --prefix=/usr/local --includedir=/usr/local/include/arm-linux-gnueabihf --libdir=/usr/local/lib/arm-linux-gnueabihf
+RUN ./b2 boost.stacktrace.from_exception=off toolset=gcc-armhf install
 FROM stage-1 AS external-boost
-
-RUN curl -fsSL -O https://boostorg.jfrog.io/artifactory/main/release/1.84.0/source/boost_1_84_0.tar.gz
-
-RUN mkdir -p /usr/local/include/x86_64-linux-gnu && \
-    tar -C /usr/local/include/x86_64-linux-gnu -xf boost_1_84_0.tar.gz --strip-components 1 \
-    boost_1_84_0/boost
-RUN mkdir -p /usr/local/share/doc/boost && \
-    tar -C /usr/local/share/doc/boost -xf boost_1_84_0.tar.gz --strip-components 1 \
-    boost_1_84_0/LICENSE_1_0.txt
-RUN mkdir -p /usr/local/include/arm-linux-gnueabihf && ln -s /usr/local/include/x86_64-linux-gnu/boost /usr/local/include/arm-linux-gnueabihf/boost
-RUN mkdir -p /usr/local/include/aarch64-linux-gnu && ln -s /usr/local/include/x86_64-linux-gnu/boost /usr/local/include/aarch64-linux-gnu/boost
-
-# crow -------------------------------------------------------------------------
-FROM stage-1 AS external-crow
-RUN apt-get update && \
-    apt-get --yes --no-install-recommends install \
-    patch && \
-    apt-get --yes clean && \
-    rm -rf /var/lib/apt/lists/*
-RUN curl -fsSL -O https://github.com/CrowCpp/Crow/releases/download/v1.0%2B5/crow-v1.0+5.tar.gz
-RUN mkdir -p /tmp/crow && tar -C /tmp/crow -xf crow-v1.0+5.tar.gz
-RUN mkdir -p /usr/local/include/x86_64-linux-gnu && cp -prT /tmp/crow/include /usr/local/include/x86_64-linux-gnu
-RUN mkdir -p /usr/local/include/arm-linux-gnueabihf && ln -s /usr/local/include/x86_64-linux-gnu/crow   /usr/local/include/arm-linux-gnueabihf/crow
-RUN mkdir -p /usr/local/include/arm-linux-gnueabihf && ln -s /usr/local/include/x86_64-linux-gnu/crow.h /usr/local/include/arm-linux-gnueabihf/crow.h
-RUN mkdir -p /usr/local/include/aarch64-linux-gnu && ln -s /usr/local/include/x86_64-linux-gnu/crow   /usr/local/include/aarch64-linux-gnu/crow
-RUN mkdir -p /usr/local/include/aarch64-linux-gnu && ln -s /usr/local/include/x86_64-linux-gnu/crow.h /usr/local/include/aarch64-linux-gnu/crow.h
-ADD patches/crow/ /tmp/
-RUN cd /usr/local/include/x86_64-linux-gnu && patch -p 1 -i /tmp/*.patch
+COPY --from=boost-build-amd64 /usr/local/include /usr/local/include
+COPY --from=boost-build-arm64 /usr/local/include /usr/local/include
+COPY --from=boost-build-armhf /usr/local/include /usr/local/include
+COPY --from=boost-build-amd64 /usr/local/lib /usr/local/lib
+COPY --from=boost-build-arm64 /usr/local/lib /usr/local/lib
+COPY --from=boost-build-armhf /usr/local/lib /usr/local/lib
 
 # googletest -------------------------------------------------------------------
 FROM stage-1 AS googletest-downloader
@@ -157,7 +155,7 @@ COPY --from=googletest-build-arm64 /usr/local/lib /usr/local/lib
 COPY --from=googletest-build-armhf /usr/local/lib /usr/local/lib
 
 # json -------------------------------------------------------------------------
-FROM stage-1 as json-downloader
+FROM stage-1 AS json-downloader
 RUN apt-get update && \
     apt-get --yes --no-install-recommends install \
     dirmngr gpg gpg-agent xz-utils && \
@@ -364,9 +362,42 @@ COPY --from=zlib-build-armhf /usr/local/lib /usr/local/lib
 # ------------------------------------------------------------------------------
 # Stage 2 dependencies / dependent on stage 1 libs (mainly OpenSSL)
 FROM stage-1 AS stage-2
+COPY --from=external-boost /usr/local/ /usr/local/
 COPY --from=external-openssl /usr/local/ /usr/local/
 FROM stage-1-make AS stage-2-make
+COPY --from=external-boost /usr/local/ /usr/local/
 COPY --from=external-openssl /usr/local/ /usr/local/
+# crow -------------------------------------------------------------------------
+FROM stage-2 AS crow-downloader
+RUN apt-get update && \
+    apt-get --yes --no-install-recommends install \
+    patch && \
+    apt-get --yes clean && \
+    rm -rf /var/lib/apt/lists/*
+RUN curl -fsSL -O https://github.com/FLECS-Technologies/Crow/archive/refs/tags/v1.0.1+5.tar.gz
+RUN mkdir -p /usr/src && tar -C /usr/src -xf v1.0.1+5.tar.gz
+WORKDIR /usr/src/Crow-1.0.1-5
+ENV CMAKE_ARGS_CROW="-DCROW_BUILD_EXAMPLES=NO -DCROW_BUILD_TESTS=NO"
+# x86_64-linux-gnu
+FROM crow-downloader AS crow-build-amd64
+RUN cmake ${CMAKE_ARGS_AMD64} ${CMAKE_ARGS_CROW}
+RUN cmake --build build/
+RUN cmake --install build/
+# aarch64-linux-gnu
+FROM crow-downloader AS crow-build-arm64
+RUN cmake ${CMAKE_ARGS_ARM64} ${CMAKE_ARGS_CROW}
+RUN cmake --build build/
+RUN cmake --install build/
+# arm-linux-gnueabihf
+FROM crow-downloader AS crow-build-armhf
+RUN cmake ${CMAKE_ARGS_ARMHF} ${CMAKE_ARGS_CROW}
+RUN cmake --build build/
+RUN cmake --install build/
+# install
+FROM stage-1 AS external-crow
+COPY --from=crow-build-amd64 /usr/local/include /usr/local/include
+COPY --from=crow-build-arm64 /usr/local/include /usr/local/include
+COPY --from=crow-build-armhf /usr/local/include /usr/local/include
 # curl -------------------------------------------------------------------------
 FROM stage-2 AS curl-downloader
 COPY --from=external-zlib /usr/local/ /usr/local/
