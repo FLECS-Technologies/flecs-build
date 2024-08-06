@@ -35,7 +35,8 @@ RUN git config --system --add safe.directory "*"
 
 RUN (curl -sSf https://sh.rustup.rs | bash -s -- -y)
 ENV PATH="${PATH}:/root/.cargo/bin"
-ENV FLECS_DEFAULT_RUST_TOOLCHAIN="1.76.0-x86_64-unknown-linux-gnu"
+ENV FLECS_DEFAULT_RUST_TOOLCHAIN_VERSION="1.76.0"
+ENV FLECS_DEFAULT_RUST_TOOLCHAIN="${FLECS_DEFAULT_RUST_TOOLCHAIN_VERSION}-x86_64-unknown-linux-gnu"
 RUN rustup install ${FLECS_DEFAULT_RUST_TOOLCHAIN}
 RUN rustup default ${FLECS_DEFAULT_RUST_TOOLCHAIN}
 RUN rustup target add --toolchain ${FLECS_DEFAULT_RUST_TOOLCHAIN} x86_64-unknown-linux-gnu
@@ -295,19 +296,19 @@ WORKDIR /usr/src/zenoh-c-0.10.1-rc
 # x86_64-linux-gnu
 FROM zenoh-c-downloader AS zenoh-c-build-amd64
 ENV RUSTFLAGS="-Clinker=x86_64-linux-gnu-gcc -Car=x86_64-linux-gnu-ar"
-RUN cmake ${CMAKE_ARGS_AMD64} -DZENOHC_CARGO_CHANNEL="1.76.0" -DZENOHC_CUSTOM_TARGET="x86_64-unknown-linux-gnu"
+RUN cmake ${CMAKE_ARGS_AMD64} -DZENOHC_CARGO_CHANNEL="${FLECS_DEFAULT_RUST_TOOLCHAIN_VERSION}" -DZENOHC_CUSTOM_TARGET="x86_64-unknown-linux-gnu"
 RUN cmake --build build/
 RUN cmake --install build/
 # aarch64-linux-gnu
 FROM zenoh-c-downloader AS zenoh-c-build-arm64
 ENV RUSTFLAGS="-Clinker=aarch64-linux-gnu-gcc -Car=aarch64-linux-gnu-ar"
-RUN cmake ${CMAKE_ARGS_ARM64} -DZENOHC_CARGO_CHANNEL="1.76.0" -DZENOHC_CUSTOM_TARGET="aarch64-unknown-linux-gnu"
+RUN cmake ${CMAKE_ARGS_ARM64} -DZENOHC_CARGO_CHANNEL="${FLECS_DEFAULT_RUST_TOOLCHAIN_VERSION}" -DZENOHC_CUSTOM_TARGET="aarch64-unknown-linux-gnu"
 RUN cmake --build build/
 RUN cmake --install build/
 # arm-linux-gnueabihf
 FROM zenoh-c-downloader AS zenoh-c-build-armhf
 ENV RUSTFLAGS="-Clinker=arm-linux-gnueabihf-gcc -Car=arm-linux-gnueabihf-ar"
-RUN cmake ${CMAKE_ARGS_ARMHF} -DZENOHC_CARGO_CHANNEL="1.76.0" -DZENOHC_CUSTOM_TARGET="armv7-unknown-linux-gnueabihf"
+RUN cmake ${CMAKE_ARGS_ARMHF} -DZENOHC_CARGO_CHANNEL="${FLECS_DEFAULT_RUST_TOOLCHAIN_VERSION}" -DZENOHC_CUSTOM_TARGET="armv7-unknown-linux-gnueabihf"
 RUN cmake --build build/
 RUN cmake --install build/
 # install
