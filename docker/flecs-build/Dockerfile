@@ -33,12 +33,12 @@ RUN apt-get update && \
 
 RUN git config --system --add safe.directory "*"
 
-RUN (curl -sSf https://sh.rustup.rs | bash -s -- -y)
-ENV PATH="${PATH}:/root/.cargo/bin"
 ENV FLECS_DEFAULT_RUST_TOOLCHAIN_VERSION="1.76.0"
 ENV FLECS_DEFAULT_RUST_TOOLCHAIN="${FLECS_DEFAULT_RUST_TOOLCHAIN_VERSION}-x86_64-unknown-linux-gnu"
-RUN rustup install ${FLECS_DEFAULT_RUST_TOOLCHAIN}
-RUN rustup default ${FLECS_DEFAULT_RUST_TOOLCHAIN}
+ENV CARGO_HOME=/usr/local/cargo
+ENV RUSTUP_HOME=/usr/local/rustup
+RUN (curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain ${FLECS_DEFAULT_RUST_TOOLCHAIN})
+ENV PATH="${PATH}:${CARGO_HOME}/bin"
 RUN rustup target add --toolchain ${FLECS_DEFAULT_RUST_TOOLCHAIN} x86_64-unknown-linux-gnu
 RUN rustup target add --toolchain ${FLECS_DEFAULT_RUST_TOOLCHAIN} aarch64-unknown-linux-gnu
 RUN rustup target add --toolchain ${FLECS_DEFAULT_RUST_TOOLCHAIN} armv7-unknown-linux-gnueabihf
