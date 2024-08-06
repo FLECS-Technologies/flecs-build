@@ -42,6 +42,10 @@ RUN rustup default ${FLECS_DEFAULT_RUST_TOOLCHAIN}
 RUN rustup target add --toolchain ${FLECS_DEFAULT_RUST_TOOLCHAIN} x86_64-unknown-linux-gnu
 RUN rustup target add --toolchain ${FLECS_DEFAULT_RUST_TOOLCHAIN} aarch64-unknown-linux-gnu
 RUN rustup target add --toolchain ${FLECS_DEFAULT_RUST_TOOLCHAIN} armv7-unknown-linux-gnueabihf
+RUN rustup component add clippy
+RUN rustup component add rustfmt
+RUN rustup component add llvm-tools-preview
+RUN cargo install cargo-llvm-cov
 
 RUN git clone https://github.com/FLECS-Technologies/flecs-build.git /usr/src/flecs-build
 
