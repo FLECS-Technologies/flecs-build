@@ -103,9 +103,9 @@ COPY --from=asio-build-armhf /usr/local/lib /usr/local/lib
 
 # Boost ------------------------------------------------------------------------
 FROM stage-1 AS boost-downloader
-RUN curl -fsSL -O https://boostorg.jfrog.io/artifactory/main/release/1.85.0/source/boost_1_85_0.tar.gz
-RUN mkdir -p /usr/src && tar -C /usr/src -xf boost_1_85_0.tar.gz
-WORKDIR /usr/src/boost_1_85_0
+RUN curl -fsSL -O https://boostorg.jfrog.io/artifactory/main/release/1.86.0/source/boost_1_86_0.tar.gz
+RUN mkdir -p /usr/src && tar -C /usr/src -xf boost_1_86_0.tar.gz
+WORKDIR /usr/src/boost_1_86_0
 RUN echo "using gcc : amd64 : x86_64-linux-gnu-g++ ;" >>/root/user-config.jam
 RUN echo "using gcc : armhf : arm-linux-gnueabihf-g++ ;" >>/root/user-config.jam
 RUN echo "using gcc : arm64 : aarch64-linux-gnu-g++ ;" >>/root/user-config.jam
@@ -132,9 +132,9 @@ COPY --from=boost-build-armhf /usr/local/lib /usr/local/lib
 
 # googletest -------------------------------------------------------------------
 FROM stage-1 AS googletest-downloader
-RUN curl -fsSL -O https://github.com/google/googletest/archive/refs/tags/v1.14.0.tar.gz
-RUN mkdir -p /usr/src && tar -C /usr/src -xf v1.14.0.tar.gz
-WORKDIR /usr/src/googletest-1.14.0
+RUN curl -fsSL -O https://github.com/google/googletest/archive/refs/tags/v1.15.2.tar.gz
+RUN mkdir -p /usr/src && tar -C /usr/src -xf v1.15.2.tar.gz
+WORKDIR /usr/src/googletest-1.15.2
 # x86_64-linux-gnu
 FROM googletest-downloader AS googletest-build-amd64
 RUN cmake ${CMAKE_ARGS_AMD64}
@@ -411,12 +411,12 @@ RUN apt-get update && \
     dirmngr gpg gpg-agent && \
     apt-get --yes clean && \
     rm -rf /var/lib/apt/lists/*
-RUN curl -fsSL -O https://github.com/curl/curl/releases/download/curl-8_8_0/curl-8.8.0.tar.gz
-RUN curl -fsSL -O https://github.com/curl/curl/releases/download/curl-8_8_0/curl-8.8.0.tar.gz.asc
+RUN curl -fsSL -O https://github.com/curl/curl/releases/download/curl-8_9_1/curl-8.9.1.tar.gz
+RUN curl -fsSL -O https://github.com/curl/curl/releases/download/curl-8_9_1/curl-8.9.1.tar.gz.asc
 RUN gpg --keyserver 'hkps://keyserver.ubuntu.com' --recv-keys '27EDEAF22F3ABCEB50DB9A125CC908FDB71E12C2'
-RUN gpg --verify curl-8.8.0.tar.gz.asc curl-8.8.0.tar.gz
-RUN mkdir -p /usr/src && tar -C /usr/src -xf curl-8.8.0.tar.gz
-WORKDIR /usr/src/curl-8.8.0
+RUN gpg --verify curl-8.9.1.tar.gz.asc curl-8.9.1.tar.gz
+RUN mkdir -p /usr/src && tar -C /usr/src -xf curl-8.9.1.tar.gz
+WORKDIR /usr/src/curl-8.9.1
 # x86_64-linux-gnu
 FROM curl-downloader AS curl-build-amd64
 RUN cmake ${CMAKE_ARGS_AMD64} -DCMAKE_INSTALL_LIBDIR=lib/x86_64-linux-gnu -DCMAKE_INSTALL_BINDIR=bin/x86_64-linux-gnu -DCMAKE_INSTALL_INCLUDEDIR=include/x86_64-linux-gnu -DCURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt -DBUILD_CURL_EXE=NO
@@ -547,7 +547,7 @@ COPY --from=cpr-build-armhf /usr/local/lib /usr/local/lib
 
 FROM stage-1 AS docker-downloader
 
-RUN curl -fsSL --output - https://download.docker.com/linux/static/stable/x86_64/docker-27.0.3.tgz |\
+RUN curl -fsSL --output - https://download.docker.com/linux/static/stable/x86_64/docker-27.1.2.tgz |\
     tar -C /usr/local/bin --strip-components=1 -xzf - docker/docker && \
     chown root:root /usr/local/bin/docker
 
@@ -556,12 +556,12 @@ FROM stage-1 AS flecs-build
 # additional packages required for building and running tests
 RUN apt-get update && \
     apt-get --yes --no-install-recommends install \
-    fakeroot gcovr udev && \
+    fakeroot gcovr iproute2 udev && \
     apt-get --yes clean && \
     rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p ~/.docker/cli-plugins && \
-    curl -L -o ~/.docker/cli-plugins/docker-buildx https://github.com/docker/buildx/releases/download/v0.15.1/buildx-v0.15.1.linux-amd64 &&\
+    curl -L -o ~/.docker/cli-plugins/docker-buildx https://github.com/docker/buildx/releases/download/v0.16.2/buildx-v0.16.2.linux-amd64 &&\
     chmod a+x ~/.docker/cli-plugins/docker-buildx
 
 # Stage 1
