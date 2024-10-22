@@ -294,9 +294,9 @@ COPY --from=yaml-cpp-build-armhf /usr/local/lib /usr/local/lib
 # zenoh-c
 FROM stage-1 AS zenoh-c-downloader
 SHELL ["/bin/bash", "-c"]
-RUN curl -fsSL -O https://github.com/eclipse-zenoh/zenoh-c/archive/refs/tags/1.0.0.10.tar.gz
-RUN mkdir -p /usr/src && tar -C /usr/src -xf 1.0.0.10.tar.gz
-WORKDIR /usr/src/zenoh-c-1.0.0.10
+RUN curl -fsSL -O https://github.com/eclipse-zenoh/zenoh-c/archive/refs/tags/1.0.0.tar.gz
+RUN mkdir -p /usr/src && tar -C /usr/src -xf 1.0.0.tar.gz
+WORKDIR /usr/src/zenoh-c-1.0.0
 # x86_64-linux-gnu
 FROM zenoh-c-downloader AS zenoh-c-build-amd64
 ENV RUSTFLAGS="-Clinker=x86_64-linux-gnu-gcc -Car=x86_64-linux-gnu-ar"
