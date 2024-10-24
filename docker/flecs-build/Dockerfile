@@ -307,19 +307,19 @@ RUN patch -p 1 -i /tmp/0001_fix_cmake_package_config.patch
 # x86_64-linux-gnu
 FROM zenoh-c-downloader AS zenoh-c-build-amd64
 ENV RUSTFLAGS="-Clinker=x86_64-linux-gnu-gcc -Car=x86_64-linux-gnu-ar"
-RUN cmake ${CMAKE_ARGS_AMD64} -DZENOHC_CARGO_CHANNEL="+${FLECS_DEFAULT_RUST_TOOLCHAIN_VERSION}" -DZENOHC_CUSTOM_TARGET="x86_64-unknown-linux-gnu"
+RUN cmake ${CMAKE_ARGS_AMD64} -DZENOHC_BUILD_WITH_UNSTABLE_API=TRUE -DZENOHC_CARGO_CHANNEL="+${FLECS_DEFAULT_RUST_TOOLCHAIN_VERSION}" -DZENOHC_CUSTOM_TARGET="x86_64-unknown-linux-gnu"
 RUN cmake --build build/
 RUN cmake --install build/
 # aarch64-linux-gnu
 FROM zenoh-c-downloader AS zenoh-c-build-arm64
 ENV RUSTFLAGS="-Clinker=aarch64-linux-gnu-gcc -Car=aarch64-linux-gnu-ar"
-RUN cmake ${CMAKE_ARGS_ARM64} -DZENOHC_CARGO_CHANNEL="+${FLECS_DEFAULT_RUST_TOOLCHAIN_VERSION}" -DZENOHC_CUSTOM_TARGET="aarch64-unknown-linux-gnu"
+RUN cmake ${CMAKE_ARGS_ARM64} -DZENOHC_BUILD_WITH_UNSTABLE_API=TRUE -DZENOHC_CARGO_CHANNEL="+${FLECS_DEFAULT_RUST_TOOLCHAIN_VERSION}" -DZENOHC_CUSTOM_TARGET="aarch64-unknown-linux-gnu"
 RUN cmake --build build/
 RUN cmake --install build/
 # arm-linux-gnueabihf
 FROM zenoh-c-downloader AS zenoh-c-build-armhf
 ENV RUSTFLAGS="-Clinker=arm-linux-gnueabihf-gcc -Car=arm-linux-gnueabihf-ar"
-RUN cmake ${CMAKE_ARGS_ARMHF} -DZENOHC_CARGO_CHANNEL="+${FLECS_DEFAULT_RUST_TOOLCHAIN_VERSION}" -DZENOHC_CUSTOM_TARGET="armv7-unknown-linux-gnueabihf"
+RUN cmake ${CMAKE_ARGS_ARMHF} -DZENOHC_BUILD_WITH_UNSTABLE_API=TRUE -DZENOHC_CARGO_CHANNEL="+${FLECS_DEFAULT_RUST_TOOLCHAIN_VERSION}" -DZENOHC_CUSTOM_TARGET="armv7-unknown-linux-gnueabihf"
 RUN cmake --build build/
 RUN cmake --install build/
 # install
