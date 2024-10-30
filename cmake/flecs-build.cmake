@@ -28,6 +28,7 @@ if(NOT FLECS_BUILD_INCLUDED)
     set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
     set(CMAKE_CXX_EXTENSIONS OFF)
     add_compile_options(-Wall -Wextra -Werror -Wfatal-errors)
+    add_definitions(-D_FILE_OFFSET_BITS=64 -D_TIME_BITS=64)
     link_libraries(dl pthread stdc++fs)
 
     # hide all symbols by default
