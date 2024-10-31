@@ -83,15 +83,15 @@ WORKDIR /usr/src/asio-1.30.2
 ENV CXXFLAGS="-std=c++20"
 # x86_64-linux-gnu
 FROM asio-downloader AS asio-build-amd64
-RUN ./configure --prefix=/usr/local --includedir=/usr/local/include/x86_64-linux-gnu --libdir=/usr/local/lib/x86_64-linux-gnu --host=x86_64-linux-gnu
+RUN ./configure CFLAGS="-D_FILE_OFFSET_BITS=64 -D_TIME_BITS=64" --prefix=/usr/local --includedir=/usr/local/include/x86_64-linux-gnu --libdir=/usr/local/lib/x86_64-linux-gnu --host=x86_64-linux-gnu
 RUN make install-data
 # aarch64-linux-gnu
 FROM asio-downloader AS asio-build-arm64
-RUN ./configure --prefix=/usr/local --includedir=/usr/local/include/aarch64-linux-gnu --libdir=/usr/local/lib/aarch64-linux-gnu --host=aarch64-linux-gnu
+RUN ./configure CFLAGS="-D_FILE_OFFSET_BITS=64 -D_TIME_BITS=64" --prefix=/usr/local --includedir=/usr/local/include/aarch64-linux-gnu --libdir=/usr/local/lib/aarch64-linux-gnu --host=aarch64-linux-gnu
 RUN make install-data
 # arm-linux-gnueabihf
 FROM asio-downloader AS asio-build-armhf
-RUN ./configure --prefix=/usr/local --includedir=/usr/local/include/arm-linux-gnueabihf --libdir=/usr/local/lib/arm-linux-gnueabihf --host=arm-linux-gnueabihf
+RUN ./configure CFLAGS="-D_FILE_OFFSET_BITS=64 -D_TIME_BITS=64" --prefix=/usr/local --includedir=/usr/local/include/arm-linux-gnueabihf --libdir=/usr/local/lib/arm-linux-gnueabihf --host=arm-linux-gnueabihf
 RUN make install-data
 FROM stage-1 AS external-asio
 COPY --from=asio-build-amd64 /usr/local/include /usr/local/include
@@ -209,15 +209,15 @@ RUN mkdir -p /usr/src && tar -C /usr/src -xf libusb-1.0.27.tar.bz2
 WORKDIR /usr/src/libusb-1.0.27
 # x86_64-linux-gnu
 FROM libusb-downloader AS libusb-build-amd64
-RUN ./configure --prefix=/usr/local --includedir=/usr/local/include/x86_64-linux-gnu --libdir=/usr/local/lib/x86_64-linux-gnu --host=x86_64-linux-gnu --enable-static=no
+RUN ./configure CFLAGS="-D_FILE_OFFSET_BITS=64 -D_TIME_BITS=64" --prefix=/usr/local --includedir=/usr/local/include/x86_64-linux-gnu --libdir=/usr/local/lib/x86_64-linux-gnu --host=x86_64-linux-gnu --enable-static=no
 RUN make -j16 all && make install-strip
 # aarch64-linux-gnu
 FROM libusb-downloader AS libusb-build-arm64
-RUN ./configure --prefix=/usr/local --includedir=/usr/local/include/aarch64-linux-gnu --libdir=/usr/local/lib/aarch64-linux-gnu --host=aarch64-linux-gnu  --enable-static=no
+RUN ./configure CFLAGS="-D_FILE_OFFSET_BITS=64 -D_TIME_BITS=64" --prefix=/usr/local --includedir=/usr/local/include/aarch64-linux-gnu --libdir=/usr/local/lib/aarch64-linux-gnu --host=aarch64-linux-gnu  --enable-static=no
 RUN make -j16 all && make install-strip
 # arm-linux-gnueabihf
 FROM libusb-downloader AS libusb-build-armhf
-RUN ./configure --prefix=/usr/local --includedir=/usr/local/include/arm-linux-gnueabihf --libdir=/usr/local/lib/arm-linux-gnueabihf --host=arm-linux-gnueabihf  --enable-static=no
+RUN ./configure CFLAGS="-D_FILE_OFFSET_BITS=64 -D_TIME_BITS=64" --prefix=/usr/local --includedir=/usr/local/include/arm-linux-gnueabihf --libdir=/usr/local/lib/arm-linux-gnueabihf --host=arm-linux-gnueabihf  --enable-static=no
 RUN make -j16 all && make install-strip
 # install
 FROM stage-1 AS external-libusb
@@ -469,15 +469,15 @@ RUN mkdir -p /usr/src && tar -C /usr/src -xf libarchive-3.7.4.tar.gz
 WORKDIR /usr/src/libarchive-3.7.4
 # x86_64-linux-gnu
 FROM libarchive-downloader AS libarchive-build-amd64
-RUN ./configure --prefix=/usr/local --includedir=/usr/local/include/x86_64-linux-gnu --libdir=/usr/local/lib/x86_64-linux-gnu --host=x86_64-linux-gnu --enable-static=no --without-expat --without-xml2
+RUN ./configure CFLAGS="-D_FILE_OFFSET_BITS=64 -D_TIME_BITS=64" --prefix=/usr/local --includedir=/usr/local/include/x86_64-linux-gnu --libdir=/usr/local/lib/x86_64-linux-gnu --host=x86_64-linux-gnu --enable-static=no --without-expat --without-xml2
 RUN make -j16 all && make install-strip
 # aarch64-linux-gnu
 FROM libarchive-downloader AS libarchive-build-arm64
-RUN ./configure --prefix=/usr/local --includedir=/usr/local/include/aarch64-linux-gnu --libdir=/usr/local/lib/aarch64-linux-gnu --host=aarch64-linux-gnu  --enable-static=no --without-expat --without-xml2
+RUN ./configure CFLAGS="-D_FILE_OFFSET_BITS=64 -D_TIME_BITS=64" --prefix=/usr/local --includedir=/usr/local/include/aarch64-linux-gnu --libdir=/usr/local/lib/aarch64-linux-gnu --host=aarch64-linux-gnu  --enable-static=no --without-expat --without-xml2
 RUN make -j16 all && make install-strip
 # arm-linux-gnueabihf
 FROM libarchive-downloader AS libarchive-build-armhf
-RUN ./configure --prefix=/usr/local --includedir=/usr/local/include/arm-linux-gnueabihf --libdir=/usr/local/lib/arm-linux-gnueabihf --host=arm-linux-gnueabihf  --enable-static=no --without-expat --without-xml2
+RUN ./configure CFLAGS="-D_FILE_OFFSET_BITS=64 -D_TIME_BITS=64" --prefix=/usr/local --includedir=/usr/local/include/arm-linux-gnueabihf --libdir=/usr/local/lib/arm-linux-gnueabihf --host=arm-linux-gnueabihf  --enable-static=no --without-expat --without-xml2
 RUN make -j16 all && make install-strip
 # install
 FROM stage-1 AS external-libarchive
