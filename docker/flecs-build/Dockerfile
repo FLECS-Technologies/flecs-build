@@ -230,11 +230,11 @@ COPY --from=libusb-build-armhf /usr/local/lib /usr/local/lib
 
 # OpenSSL ----------------------------------------------------------------------
 FROM stage-1-make AS openssl-downloader
-RUN curl -fsSL -O https://www.openssl.org/source/openssl-3.3.1.tar.gz
-RUN curl -fsSL -O https://www.openssl.org/source/openssl-3.3.1.tar.gz.sha256
-RUN echo "$(cat openssl-3.3.1.tar.gz.sha256) openssl-3.3.1.tar.gz" | sha256sum --check --status
-RUN mkdir -p /usr/src && tar -C /usr/src -xf openssl-3.3.1.tar.gz
-WORKDIR /usr/src/openssl-3.3.1
+RUN curl -fsSL -O https://www.openssl.org/source/openssl-3.4.0.tar.gz
+RUN curl -fsSL -O https://www.openssl.org/source/openssl-3.4.0.tar.gz.sha256
+RUN echo "$(cat openssl-3.4.0.tar.gz.sha256)" | sha256sum --check --status
+RUN mkdir -p /usr/src && tar -C /usr/src -xf openssl-3.4.0.tar.gz
+WORKDIR /usr/src/openssl-3.4.0
 # x86_64-linux-gnu
 FROM openssl-downloader AS openssl-build-amd64
 RUN ./Configure linux-x86_64 --libdir=lib --cross-compile-prefix=x86_64-linux-gnu- --prefix=/usr/local shared
@@ -418,12 +418,12 @@ RUN apt-get update && \
     dirmngr gpg gpg-agent && \
     apt-get --yes clean && \
     rm -rf /var/lib/apt/lists/*
-RUN curl -fsSL -O https://github.com/curl/curl/releases/download/curl-8_9_1/curl-8.9.1.tar.gz
-RUN curl -fsSL -O https://github.com/curl/curl/releases/download/curl-8_9_1/curl-8.9.1.tar.gz.asc
+RUN curl -fsSL -O https://github.com/curl/curl/releases/download/curl-8_10_1/curl-8.10.1.tar.gz
+RUN curl -fsSL -O https://github.com/curl/curl/releases/download/curl-8_10_1/curl-8.10.1.tar.gz.asc
 RUN gpg --keyserver 'hkps://keyserver.ubuntu.com' --recv-keys '27EDEAF22F3ABCEB50DB9A125CC908FDB71E12C2'
-RUN gpg --verify curl-8.9.1.tar.gz.asc curl-8.9.1.tar.gz
-RUN mkdir -p /usr/src && tar -C /usr/src -xf curl-8.9.1.tar.gz
-WORKDIR /usr/src/curl-8.9.1
+RUN gpg --verify curl-8.10.1.tar.gz.asc curl-8.10.1.tar.gz
+RUN mkdir -p /usr/src && tar -C /usr/src -xf curl-8.10.1.tar.gz
+WORKDIR /usr/src/curl-8.10.1
 # x86_64-linux-gnu
 FROM curl-downloader AS curl-build-amd64
 RUN cmake ${CMAKE_ARGS_AMD64} -DCMAKE_INSTALL_LIBDIR=lib/x86_64-linux-gnu -DCMAKE_INSTALL_BINDIR=bin/x86_64-linux-gnu -DCMAKE_INSTALL_INCLUDEDIR=include/x86_64-linux-gnu -DCURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt -DBUILD_CURL_EXE=NO
@@ -461,12 +461,12 @@ RUN apt-get update && \
     dirmngr gpg gpg-agent && \
     apt-get --yes clean && \
     rm -rf /var/lib/apt/lists/*
-RUN curl -fsSL -O https://github.com/libarchive/libarchive/releases/download/v3.7.4/libarchive-3.7.4.tar.gz
-RUN curl -fsSL -O https://github.com/libarchive/libarchive/releases/download/v3.7.4/libarchive-3.7.4.tar.gz.asc
+RUN curl -fsSL -O https://github.com/libarchive/libarchive/releases/download/v3.7.7/libarchive-3.7.7.tar.gz
+RUN curl -fsSL -O https://github.com/libarchive/libarchive/releases/download/v3.7.7/libarchive-3.7.7.tar.gz.asc
 RUN gpg --keyserver 'hkps://keyserver.ubuntu.com' --recv-keys 'DB2C7CF1B4C265FAEF56E3FC5848A18B8F14184B'
-RUN gpg --verify libarchive-3.7.4.tar.gz.asc libarchive-3.7.4.tar.gz
-RUN mkdir -p /usr/src && tar -C /usr/src -xf libarchive-3.7.4.tar.gz
-WORKDIR /usr/src/libarchive-3.7.4
+RUN gpg --verify libarchive-3.7.7.tar.gz.asc libarchive-3.7.7.tar.gz
+RUN mkdir -p /usr/src && tar -C /usr/src -xf libarchive-3.7.7.tar.gz
+WORKDIR /usr/src/libarchive-3.7.7
 # x86_64-linux-gnu
 FROM libarchive-downloader AS libarchive-build-amd64
 RUN ./configure CFLAGS="-D_FILE_OFFSET_BITS=64 -D_TIME_BITS=64" --prefix=/usr/local --includedir=/usr/local/include/x86_64-linux-gnu --libdir=/usr/local/lib/x86_64-linux-gnu --host=x86_64-linux-gnu --enable-static=no --without-expat --without-xml2
@@ -490,9 +490,9 @@ COPY --from=libarchive-build-armhf /usr/local/lib /usr/local/lib
 
 # mosquitto --------------------------------------------------------------------
 FROM stage-2 AS mosquitto-downloader
-RUN curl -fsSL -O https://github.com/eclipse/mosquitto/archive/refs/tags/v2.0.18.tar.gz
-RUN mkdir -p /usr/src && tar -C /usr/src -xf v2.0.18.tar.gz
-WORKDIR /usr/src/mosquitto-2.0.18
+RUN curl -fsSL -O https://github.com/eclipse/mosquitto/archive/refs/tags/v2.0.20.tar.gz
+RUN mkdir -p /usr/src && tar -C /usr/src -xf v2.0.20.tar.gz
+WORKDIR /usr/src/mosquitto-2.0.20
 ENV CMAKE_ARGS_MOSQUITTO="-DDOCUMENTATION=NO -DWITH_STATIC_LIBRARIES=NO -DWITH_PIC=YES -DWITH_APPS=NO -DWITH_BROKER=NO -DWITH_CLIENTS=NO -DWITH_PLUGINS=NO -DWITH_LIB_CPP=NO"
 # x86_64-linux-gnu
 FROM mosquitto-downloader AS mosquitto-build-amd64
@@ -524,9 +524,9 @@ COPY --from=mosquitto-build-armhf /usr/local/lib /usr/local/lib
 FROM stage-2 AS cpr-downloader
 COPY --from=external-curl /usr/local/ /usr/local/
 COPY --from=external-zlib /usr/local/ /usr/local/
-RUN curl -fsSL -O https://github.com/libcpr/cpr/archive/refs/tags/1.10.5.tar.gz
-RUN mkdir -p /usr/src && tar -C /usr/src -xf 1.10.5.tar.gz
-WORKDIR /usr/src/cpr-1.10.5
+RUN curl -fsSL -O https://github.com/libcpr/cpr/archive/refs/tags/1.11.0.tar.gz
+RUN mkdir -p /usr/src && tar -C /usr/src -xf 1.11.0.tar.gz
+WORKDIR /usr/src/cpr-1.11.0
 ENV CMAKE_ARGS_CPR="-DCPR_BUILD_TESTS=NO -DCPR_USE_SYSTEM_CURL=YES"
 # x86_64-linux-gnu
 FROM cpr-downloader AS cpr-build-amd64
@@ -568,7 +568,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p ~/.docker/cli-plugins && \
-    curl -L -o ~/.docker/cli-plugins/docker-buildx https://github.com/docker/buildx/releases/download/v0.16.2/buildx-v0.16.2.linux-amd64 &&\
+    curl -L -o ~/.docker/cli-plugins/docker-buildx https://github.com/docker/buildx/releases/download/v0.18.0/buildx-v0.18.0.linux-amd64 &&\
     chmod a+x ~/.docker/cli-plugins/docker-buildx
 
 # Stage 1
