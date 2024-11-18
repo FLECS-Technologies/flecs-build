@@ -1,0 +1,12 @@
+name: Develop
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-and-push:
+    uses: ./.github/workflows/build-and-push.yml
+    with:
+      docker_tag: develop
+    secrets: inherit

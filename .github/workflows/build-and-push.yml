@@ -1,0 +1,40 @@
+name: Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      docker_tag:
+        description: 'Docker tag to build'
+        required: true
+        default: 'develop'
+        type: choice
+        options:
+          - develop
+          - latest
+  workflow_call:
+    inputs:
+      docker_tag:
+        type: string
+        required: true
+
+jobs:
+  build-and-push:
+    runs-on: construction-worker
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login to Azure Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: flecspublic.azurecr.io
+          username: ${{ secrets.REGISTRY_USER }}
+          password: ${{ secrets.REGISTRY_AUTH }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: docker/flecs-build
+          push: true
+          tags: flecspublic.azurecr.io/flecs-build:${{ inputs.docker_tag }}
