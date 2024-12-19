@@ -19,7 +19,7 @@ on:
 
 jobs:
   build-and-push:
-    runs-on: construction-worker
+    runs-on: efficienator
 
     steps:
       - name: Checkout
