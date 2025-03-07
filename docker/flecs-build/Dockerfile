@@ -45,7 +45,7 @@ RUN rustup target add --toolchain ${FLECS_DEFAULT_RUST_TOOLCHAIN} armv7-unknown-
 RUN rustup component add clippy
 RUN rustup component add rustfmt
 RUN rustup component add llvm-tools-preview
-RUN cargo install cargo-llvm-cov
+RUN cargo install --version 0.6.15 cargo-llvm-cov
 
 RUN git clone https://github.com/FLECS-Technologies/flecs-build.git /usr/src/flecs-build
 
@@ -103,7 +103,7 @@ COPY --from=asio-build-armhf /usr/local/lib /usr/local/lib
 
 # Boost ------------------------------------------------------------------------
 FROM stage-1 AS boost-downloader
-RUN curl -fsSL -O https://boostorg.jfrog.io/artifactory/main/release/1.87.0/source/boost_1_87_0.tar.gz
+RUN curl -fsSL -O https://archives.boost.io/release/1.87.0/source/boost_1_87_0.tar.gz
 RUN mkdir -p /usr/src && tar -C /usr/src -xf boost_1_87_0.tar.gz
 WORKDIR /usr/src/boost_1_87_0
 RUN echo "using gcc : amd64 : x86_64-linux-gnu-g++ ;" >>/root/user-config.jam
