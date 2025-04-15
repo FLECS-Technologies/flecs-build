@@ -291,44 +291,6 @@ COPY --from=yaml-cpp-build-amd64 /usr/local/lib /usr/local/lib
 COPY --from=yaml-cpp-build-arm64 /usr/local/lib /usr/local/lib
 COPY --from=yaml-cpp-build-armhf /usr/local/lib /usr/local/lib
 
-# zenoh-c
-FROM stage-1 AS zenoh-c-downloader
-SHELL ["/bin/bash", "-c"]
-RUN apt-get update && \
-    apt-get --yes --no-install-recommends install \
-    patch && \
-    apt-get --yes clean && \
-    rm -rf /var/lib/apt/lists/*
-RUN curl -fsSL -O https://github.com/eclipse-zenoh/zenoh-c/archive/refs/tags/1.1.0.tar.gz
-RUN mkdir -p /usr/src && tar -C /usr/src -xf 1.1.0.tar.gz
-WORKDIR /usr/src/zenoh-c-1.1.0
-# x86_64-linux-gnu
-FROM zenoh-c-downloader AS zenoh-c-build-amd64
-ENV RUSTFLAGS="-Clinker=x86_64-linux-gnu-gcc -Car=x86_64-linux-gnu-ar"
-RUN cmake ${CMAKE_ARGS_AMD64} -DZENOHC_BUILD_WITH_UNSTABLE_API=TRUE -DZENOHC_CARGO_CHANNEL="+${FLECS_DEFAULT_RUST_TOOLCHAIN_VERSION}" -DZENOHC_CUSTOM_TARGET="x86_64-unknown-linux-gnu"
-RUN cmake --build build/
-RUN cmake --install build/
-# aarch64-linux-gnu
-FROM zenoh-c-downloader AS zenoh-c-build-arm64
-ENV RUSTFLAGS="-Clinker=aarch64-linux-gnu-gcc -Car=aarch64-linux-gnu-ar"
-RUN cmake ${CMAKE_ARGS_ARM64} -DZENOHC_BUILD_WITH_UNSTABLE_API=TRUE -DZENOHC_CARGO_CHANNEL="+${FLECS_DEFAULT_RUST_TOOLCHAIN_VERSION}" -DZENOHC_CUSTOM_TARGET="aarch64-unknown-linux-gnu"
-RUN cmake --build build/
-RUN cmake --install build/
-# arm-linux-gnueabihf
-FROM zenoh-c-downloader AS zenoh-c-build-armhf
-ENV RUSTFLAGS="-Clinker=arm-linux-gnueabihf-gcc -Car=arm-linux-gnueabihf-ar"
-RUN cmake ${CMAKE_ARGS_ARMHF} -DZENOHC_BUILD_WITH_UNSTABLE_API=TRUE -DZENOHC_CARGO_CHANNEL="+${FLECS_DEFAULT_RUST_TOOLCHAIN_VERSION}" -DZENOHC_CUSTOM_TARGET="armv7-unknown-linux-gnueabihf"
-RUN cmake --build build/
-RUN cmake --install build/
-# install
-FROM stage-1 AS external-zenoh-c
-COPY --from=zenoh-c-build-amd64 /usr/local/include /usr/local/include
-COPY --from=zenoh-c-build-arm64 /usr/local/include /usr/local/include
-COPY --from=zenoh-c-build-armhf /usr/local/include /usr/local/include
-COPY --from=zenoh-c-build-amd64 /usr/local/lib /usr/local/lib
-COPY --from=zenoh-c-build-arm64 /usr/local/lib /usr/local/lib
-COPY --from=zenoh-c-build-armhf /usr/local/lib /usr/local/lib
-
 # zlib -------------------------------------------------------------------------
 FROM stage-1 AS zlib-downloader
 RUN apt-get update && \
@@ -578,7 +540,6 @@ COPY --from=external-json /usr/local/ /usr/local/
 COPY --from=external-libusb /usr/local/ /usr/local/
 COPY --from=external-openssl /usr/local/ /usr/local/
 COPY --from=external-yaml-cpp /usr/local/ /usr/local/
-COPY --from=external-zenoh-c /usr/local/ /usr/local/
 COPY --from=external-zlib /usr/local/ /usr/local/
 # Stage 2
 COPY --from=external-curl /usr/local/ /usr/local/
