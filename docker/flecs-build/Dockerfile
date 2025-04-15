@@ -33,7 +33,7 @@ RUN apt-get update && \
 
 RUN git config --system --add safe.directory "*"
 
-ENV FLECS_DEFAULT_RUST_TOOLCHAIN_VERSION="1.76.0"
+ENV FLECS_DEFAULT_RUST_TOOLCHAIN_VERSION="1.86.0"
 ENV FLECS_DEFAULT_RUST_TOOLCHAIN="${FLECS_DEFAULT_RUST_TOOLCHAIN_VERSION}-x86_64-unknown-linux-gnu"
 ENV CARGO_HOME=/usr/local/cargo
 ENV RUSTUP_HOME=/usr/local/rustup
