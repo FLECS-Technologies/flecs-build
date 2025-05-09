@@ -30,22 +30,6 @@ RUN apt-get update && \
 
 RUN git config --system --add safe.directory "*"
 
-ENV FLECS_DEFAULT_RUST_TOOLCHAIN_VERSION="1.86.0"
-ENV FLECS_DEFAULT_RUST_TOOLCHAIN="${FLECS_DEFAULT_RUST_TOOLCHAIN_VERSION}-x86_64-unknown-linux-gnu"
-ENV CARGO_HOME=/usr/local/cargo
-ENV RUSTUP_HOME=/usr/local/rustup
-RUN (curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain ${FLECS_DEFAULT_RUST_TOOLCHAIN})
-ENV PATH="${PATH}:${CARGO_HOME}/bin"
-RUN rustup target add --toolchain ${FLECS_DEFAULT_RUST_TOOLCHAIN} x86_64-unknown-linux-gnu
-RUN rustup target add --toolchain ${FLECS_DEFAULT_RUST_TOOLCHAIN} aarch64-unknown-linux-gnu
-RUN rustup target add --toolchain ${FLECS_DEFAULT_RUST_TOOLCHAIN} armv7-unknown-linux-gnueabihf
-RUN rustup component add clippy
-RUN rustup component add rustfmt
-RUN rustup component add llvm-tools-preview
-RUN cargo install cargo-llvm-cov
-
-WORKDIR /tmp
-
 # Some externals require make, so setup an extended base containing make
 FROM stage-1 AS stage-1-make
 RUN apt-get update && \
@@ -103,6 +87,21 @@ RUN apt-get update && \
 RUN mkdir -p ~/.docker/cli-plugins && \
     curl -L -o ~/.docker/cli-plugins/docker-buildx https://github.com/docker/buildx/releases/download/v0.23.0/buildx-v0.23.0.linux-amd64 &&\
     chmod a+x ~/.docker/cli-plugins/docker-buildx
+
+# Rust toolchain
+ENV FLECS_DEFAULT_RUST_TOOLCHAIN_VERSION="1.86.0"
+ENV FLECS_DEFAULT_RUST_TOOLCHAIN="${FLECS_DEFAULT_RUST_TOOLCHAIN_VERSION}-x86_64-unknown-linux-gnu"
+ENV CARGO_HOME=/usr/local/cargo
+ENV RUSTUP_HOME=/usr/local/rustup
+RUN (curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain ${FLECS_DEFAULT_RUST_TOOLCHAIN})
+ENV PATH="${PATH}:${CARGO_HOME}/bin"
+RUN rustup target add --toolchain ${FLECS_DEFAULT_RUST_TOOLCHAIN} x86_64-unknown-linux-gnu
+RUN rustup target add --toolchain ${FLECS_DEFAULT_RUST_TOOLCHAIN} aarch64-unknown-linux-gnu
+RUN rustup target add --toolchain ${FLECS_DEFAULT_RUST_TOOLCHAIN} armv7-unknown-linux-gnueabihf
+RUN rustup component add clippy
+RUN rustup component add rustfmt
+RUN rustup component add llvm-tools-preview
+RUN cargo install cargo-llvm-cov
 
 # Stage 1
 COPY --from=external-openssl /usr/local/ /usr/local/
