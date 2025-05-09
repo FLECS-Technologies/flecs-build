@@ -22,12 +22,9 @@
 #   - rustup with toolchains for cross-compiling
 FROM debian:bookworm-slim AS stage-1
 
-RUN dpkg --add-architecture arm64
-RUN dpkg --add-architecture armhf
-
 RUN apt-get update && \
     apt-get --yes --no-install-recommends install \
-    ca-certificates curl cmake g++ g++-arm-linux-gnueabihf g++-aarch64-linux-gnu git libudev-dev libudev-dev:arm64 libudev-dev:armhf ninja-build pkg-config && \
+    ca-certificates curl cmake g++ g++-arm-linux-gnueabihf g++-aarch64-linux-gnu git ninja-build pkg-config && \
     apt-get --yes clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -47,22 +44,7 @@ RUN rustup component add rustfmt
 RUN rustup component add llvm-tools-preview
 RUN cargo install --version 0.6.15 cargo-llvm-cov
 
-RUN git clone https://github.com/FLECS-Technologies/flecs-build.git /usr/src/flecs-build
-
 WORKDIR /tmp
-
-ARG FLECS_DEBUG
-
-ENV BUILD_ENV=${FLECS_DEBUG:+Debug}
-ENV BUILD_ENV=${BUILD_ENV:-Release}
-
-ENV PATH="${PATH}:/usr/local/bin/x86_64-linux-gnu"
-ENV CMAKE_ARGS_COMMON="-G Ninja -B build -DCMAKE_CXX_STANDARD=20 -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_BUILD_TYPE=${BUILD_ENV} -DCMAKE_INSTALL_PREFIX=/usr/local"
-ENV CMAKE_ARGS_AMD64="${CMAKE_ARGS_COMMON} -DCMAKE_INSTALL_INCLUDEDIR=include/x86_64-linux-gnu    -DCMAKE_INSTALL_LIBDIR=lib/x86_64-linux-gnu    -DCMAKE_INSTALL_BINDIR=bin/x86_64-linux-gnu    -DCMAKE_TOOLCHAIN_FILE=/usr/src/flecs-build/cmake/toolchains/amd64.cmake"
-ENV CMAKE_ARGS_ARM64="${CMAKE_ARGS_COMMON} -DCMAKE_INSTALL_INCLUDEDIR=include/aarch64-linux-gnu   -DCMAKE_INSTALL_LIBDIR=lib/aarch64-linux-gnu   -DCMAKE_INSTALL_BINDIR=bin/aarch64-linux-gnu   -DCMAKE_TOOLCHAIN_FILE=/usr/src/flecs-build/cmake/toolchains/arm64.cmake"
-ENV CMAKE_ARGS_ARMHF="${CMAKE_ARGS_COMMON} -DCMAKE_INSTALL_INCLUDEDIR=include/arm-linux-gnueabihf -DCMAKE_INSTALL_LIBDIR=lib/arm-linux-gnueabihf -DCMAKE_INSTALL_BINDIR=bin/arm-linux-gnueabihf -DCMAKE_TOOLCHAIN_FILE=/usr/src/flecs-build/cmake/toolchains/armhf.cmake"
-ENV CARGO_PROFILE=${FLECS_DEBUG:+"--profile dev"}
-ENV CARGO_PROFILE=${CARGO_PROFILE:-"--profile release"}
 
 # Some externals require make, so setup an extended base containing make
 FROM stage-1 AS stage-1-make
