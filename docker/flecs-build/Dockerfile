@@ -42,7 +42,7 @@ RUN rustup target add --toolchain ${FLECS_DEFAULT_RUST_TOOLCHAIN} armv7-unknown-
 RUN rustup component add clippy
 RUN rustup component add rustfmt
 RUN rustup component add llvm-tools-preview
-RUN cargo install --version 0.6.15 cargo-llvm-cov
+RUN cargo install cargo-llvm-cov
 
 WORKDIR /tmp
 
