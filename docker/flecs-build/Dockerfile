@@ -478,40 +478,6 @@ COPY --from=mosquitto-build-amd64 /usr/local/lib /usr/local/lib
 COPY --from=mosquitto-build-arm64 /usr/local/lib /usr/local/lib
 COPY --from=mosquitto-build-armhf /usr/local/lib /usr/local/lib
 
-# ------------------------------------------------------------------------------
-# Stage 3 dependencies / dependent on stage 2 libs
-# cpr --------------------------------------------------------------------------
-FROM stage-2 AS cpr-downloader
-COPY --from=external-curl /usr/local/ /usr/local/
-COPY --from=external-zlib /usr/local/ /usr/local/
-RUN curl -fsSL -O https://github.com/libcpr/cpr/archive/refs/tags/1.11.1.tar.gz
-RUN mkdir -p /usr/src && tar -C /usr/src -xf 1.11.1.tar.gz
-WORKDIR /usr/src/cpr-1.11.1
-ENV CMAKE_ARGS_CPR="-DCPR_BUILD_TESTS=NO -DCPR_USE_SYSTEM_CURL=YES"
-# x86_64-linux-gnu
-FROM cpr-downloader AS cpr-build-amd64
-RUN cmake ${CMAKE_ARGS_AMD64} ${CMAKE_ARGS_CPR}
-RUN cmake --build build/
-RUN cmake --install build/
-# aarch64-linux-gnu
-FROM cpr-downloader AS cpr-build-arm64
-RUN cmake ${CMAKE_ARGS_ARM64} ${CMAKE_ARGS_CPR}
-RUN cmake --build build/
-RUN cmake --install build/
-# arm-linux-gnueabihf
-FROM cpr-downloader AS cpr-build-armhf
-RUN cmake ${CMAKE_ARGS_ARMHF} ${CMAKE_ARGS_CPR}
-RUN cmake --build build/
-RUN cmake --install build/
-# install
-FROM stage-1 AS external-cpr
-COPY --from=cpr-build-amd64 /usr/local/include /usr/local/include
-COPY --from=cpr-build-arm64 /usr/local/include /usr/local/include
-COPY --from=cpr-build-armhf /usr/local/include /usr/local/include
-COPY --from=cpr-build-amd64 /usr/local/lib /usr/local/lib
-COPY --from=cpr-build-arm64 /usr/local/lib /usr/local/lib
-COPY --from=cpr-build-armhf /usr/local/lib /usr/local/lib
-
 FROM stage-1 AS docker-downloader
 
 RUN curl -fsSL --output - https://download.docker.com/linux/static/stable/x86_64/docker-27.4.1.tgz |\
@@ -545,8 +511,6 @@ COPY --from=external-zlib /usr/local/ /usr/local/
 COPY --from=external-curl /usr/local/ /usr/local/
 COPY --from=external-libarchive /usr/local/ /usr/local/
 COPY --from=external-mosquitto /usr/local/ /usr/local/
-# Stage 3
-COPY --from=external-cpr /usr/local/ /usr/local/
 # Run ldconfig
 RUN echo "/lib/x86_64-linux-gnu\n/usr/lib/x86_64-linux-gnu\n/usr/local/lib/x86_64-linux-gnu" >/etc/ld.so.conf.d/x86_64-linux-gnu.conf && ldconfig
 # Docker
