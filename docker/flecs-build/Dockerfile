@@ -91,8 +91,8 @@ RUN mkdir -p ~/.docker/cli-plugins && \
 # Rust toolchain
 ENV FLECS_DEFAULT_RUST_TOOLCHAIN_VERSION="1.86.0"
 ENV FLECS_DEFAULT_RUST_TOOLCHAIN="${FLECS_DEFAULT_RUST_TOOLCHAIN_VERSION}-x86_64-unknown-linux-gnu"
-ENV CARGO_HOME=/usr/local/cargo
-ENV RUSTUP_HOME=/usr/local/rustup
+ENV CARGO_HOME=/opt/cargo
+ENV RUSTUP_HOME=/opt/rustup
 RUN (curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain ${FLECS_DEFAULT_RUST_TOOLCHAIN})
 ENV PATH="${PATH}:${CARGO_HOME}/bin"
 RUN rustup target add --toolchain ${FLECS_DEFAULT_RUST_TOOLCHAIN} x86_64-unknown-linux-gnu
