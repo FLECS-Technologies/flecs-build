@@ -331,153 +331,6 @@ COPY --from=zlib-build-amd64 /usr/local/lib /usr/local/lib
 COPY --from=zlib-build-arm64 /usr/local/lib /usr/local/lib
 COPY --from=zlib-build-armhf /usr/local/lib /usr/local/lib
 
-# ------------------------------------------------------------------------------
-# Stage 2 dependencies / dependent on stage 1 libs (mainly OpenSSL)
-FROM stage-1 AS stage-2
-COPY --from=external-boost /usr/local/ /usr/local/
-COPY --from=external-openssl /usr/local/ /usr/local/
-FROM stage-1-make AS stage-2-make
-COPY --from=external-boost /usr/local/ /usr/local/
-COPY --from=external-openssl /usr/local/ /usr/local/
-# crow -------------------------------------------------------------------------
-FROM stage-2 AS crow-downloader
-RUN apt-get update && \
-    apt-get --yes --no-install-recommends install \
-    patch && \
-    apt-get --yes clean && \
-    rm -rf /var/lib/apt/lists/*
-RUN curl -fsSL -O https://github.com/FLECS-Technologies/Crow/archive/refs/tags/v1.0.1+5.tar.gz
-RUN mkdir -p /usr/src && tar -C /usr/src -xf v1.0.1+5.tar.gz
-WORKDIR /usr/src/Crow-1.0.1-5
-ENV CMAKE_ARGS_CROW="-DCROW_BUILD_EXAMPLES=NO -DCROW_BUILD_TESTS=NO"
-# x86_64-linux-gnu
-FROM crow-downloader AS crow-build-amd64
-RUN cmake ${CMAKE_ARGS_AMD64} ${CMAKE_ARGS_CROW}
-RUN cmake --build build/
-RUN cmake --install build/
-# aarch64-linux-gnu
-FROM crow-downloader AS crow-build-arm64
-RUN cmake ${CMAKE_ARGS_ARM64} ${CMAKE_ARGS_CROW}
-RUN cmake --build build/
-RUN cmake --install build/
-# arm-linux-gnueabihf
-FROM crow-downloader AS crow-build-armhf
-RUN cmake ${CMAKE_ARGS_ARMHF} ${CMAKE_ARGS_CROW}
-RUN cmake --build build/
-RUN cmake --install build/
-# install
-FROM stage-1 AS external-crow
-COPY --from=crow-build-amd64 /usr/local/include /usr/local/include
-COPY --from=crow-build-arm64 /usr/local/include /usr/local/include
-COPY --from=crow-build-armhf /usr/local/include /usr/local/include
-# curl -------------------------------------------------------------------------
-FROM stage-2 AS curl-downloader
-COPY --from=external-zlib /usr/local/ /usr/local/
-RUN apt-get update && \
-    apt-get --yes --no-install-recommends install \
-    dirmngr gpg gpg-agent && \
-    apt-get --yes clean && \
-    rm -rf /var/lib/apt/lists/*
-RUN curl -fsSL -O https://github.com/curl/curl/releases/download/curl-8_11_1/curl-8.11.1.tar.gz
-RUN curl -fsSL -O https://github.com/curl/curl/releases/download/curl-8_11_1/curl-8.11.1.tar.gz.asc
-RUN gpg --keyserver 'hkps://keyserver.ubuntu.com' --recv-keys '27EDEAF22F3ABCEB50DB9A125CC908FDB71E12C2'
-RUN gpg --verify curl-8.11.1.tar.gz.asc curl-8.11.1.tar.gz
-RUN mkdir -p /usr/src && tar -C /usr/src -xf curl-8.11.1.tar.gz
-WORKDIR /usr/src/curl-8.11.1
-# x86_64-linux-gnu
-FROM curl-downloader AS curl-build-amd64
-RUN cmake ${CMAKE_ARGS_AMD64} -DCMAKE_INSTALL_LIBDIR=lib/x86_64-linux-gnu -DCMAKE_INSTALL_BINDIR=bin/x86_64-linux-gnu -DCMAKE_INSTALL_INCLUDEDIR=include/x86_64-linux-gnu -DCURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt -DBUILD_CURL_EXE=NO
-RUN cmake --build build/
-RUN cmake --install build/
-RUN [ "${BUILD_ENV}" = "Debug" ] && ln -s libcurl-d.so /usr/local/lib/x86_64-linux-gnu/libcurl.so || true
-# aarch64-linux-gnu
-FROM curl-downloader AS curl-build-arm64
-RUN cmake ${CMAKE_ARGS_ARM64} -DCMAKE_INSTALL_LIBDIR=lib/aarch64-linux-gnu -DCMAKE_INSTALL_BINDIR=bin/aarch64-linux-gnu -DCMAKE_INSTALL_INCLUDEDIR=include/aarch64-linux-gnu -DCURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt -DBUILD_CURL_EXE=NO
-RUN cmake --build build/
-RUN cmake --install build/
-RUN [ "${BUILD_ENV}" = "Debug" ] && ln -s libcurl-d.so /usr/local/lib/aarch64-linux-gnu/libcurl.so || true
-# arm-linux-gnueabihf
-FROM curl-downloader AS curl-build-armhf
-RUN cmake ${CMAKE_ARGS_ARMHF} -DCMAKE_INSTALL_LIBDIR=lib/arm-linux-gnueabihf -DCMAKE_INSTALL_BINDIR=bin/arm-linux-gnueabihf -DCMAKE_INSTALL_INCLUDEDIR=include/arm-linux-gnueabihf -DCURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt -DBUILD_CURL_EXE=NO
-RUN cmake --build build/
-RUN cmake --install build/
-RUN [ "${BUILD_ENV}" = "Debug" ] && ln -s libcurl-d.so /usr/local/lib/arm-linux-gnueabihf/libcurl.so || true
-# install
-FROM stage-1 AS external-curl
-COPY --from=curl-build-amd64 /usr/local/include/ /usr/local/include/
-COPY --from=curl-build-arm64 /usr/local/include/ /usr/local/include/
-COPY --from=curl-build-armhf /usr/local/include/ /usr/local/include/
-COPY --from=curl-build-amd64 /usr/local/lib/ /usr/local/lib/
-COPY --from=curl-build-arm64 /usr/local/lib/ /usr/local/lib/
-COPY --from=curl-build-armhf /usr/local/lib/ /usr/local/lib/
-COPY --from=curl-build-amd64 /usr/local/bin/ /usr/local/bin/
-COPY --from=curl-build-arm64 /usr/local/bin/ /usr/local/bin/
-COPY --from=curl-build-armhf /usr/local/bin/ /usr/local/bin/
-
-# libarchive -------------------------------------------------------------------
-FROM stage-2-make AS libarchive-downloader
-RUN apt-get update && \
-    apt-get --yes --no-install-recommends install \
-    dirmngr gpg gpg-agent && \
-    apt-get --yes clean && \
-    rm -rf /var/lib/apt/lists/*
-RUN curl -fsSL -O https://github.com/libarchive/libarchive/releases/download/v3.7.7/libarchive-3.7.7.tar.gz
-RUN curl -fsSL -O https://github.com/libarchive/libarchive/releases/download/v3.7.7/libarchive-3.7.7.tar.gz.asc
-RUN gpg --keyserver 'hkps://keyserver.ubuntu.com' --recv-keys 'DB2C7CF1B4C265FAEF56E3FC5848A18B8F14184B'
-RUN gpg --verify libarchive-3.7.7.tar.gz.asc libarchive-3.7.7.tar.gz
-RUN mkdir -p /usr/src && tar -C /usr/src -xf libarchive-3.7.7.tar.gz
-WORKDIR /usr/src/libarchive-3.7.7
-# x86_64-linux-gnu
-FROM libarchive-downloader AS libarchive-build-amd64
-RUN ./configure CFLAGS="-D_FILE_OFFSET_BITS=64 -D_TIME_BITS=64" --prefix=/usr/local --includedir=/usr/local/include/x86_64-linux-gnu --libdir=/usr/local/lib/x86_64-linux-gnu --host=x86_64-linux-gnu --enable-static=no --without-expat --without-xml2
-RUN make -j16 all && make install-strip
-# aarch64-linux-gnu
-FROM libarchive-downloader AS libarchive-build-arm64
-RUN ./configure CFLAGS="-D_FILE_OFFSET_BITS=64 -D_TIME_BITS=64" --prefix=/usr/local --includedir=/usr/local/include/aarch64-linux-gnu --libdir=/usr/local/lib/aarch64-linux-gnu --host=aarch64-linux-gnu  --enable-static=no --without-expat --without-xml2
-RUN make -j16 all && make install-strip
-# arm-linux-gnueabihf
-FROM libarchive-downloader AS libarchive-build-armhf
-RUN ./configure CFLAGS="-D_FILE_OFFSET_BITS=64 -D_TIME_BITS=64" --prefix=/usr/local --includedir=/usr/local/include/arm-linux-gnueabihf --libdir=/usr/local/lib/arm-linux-gnueabihf --host=arm-linux-gnueabihf  --enable-static=no --without-expat --without-xml2
-RUN make -j16 all && make install-strip
-# install
-FROM stage-1 AS external-libarchive
-COPY --from=libarchive-build-amd64 /usr/local/include /usr/local/include
-COPY --from=libarchive-build-arm64 /usr/local/include /usr/local/include
-COPY --from=libarchive-build-armhf /usr/local/include /usr/local/include
-COPY --from=libarchive-build-amd64 /usr/local/lib /usr/local/lib
-COPY --from=libarchive-build-arm64 /usr/local/lib /usr/local/lib
-COPY --from=libarchive-build-armhf /usr/local/lib /usr/local/lib
-
-# mosquitto --------------------------------------------------------------------
-FROM stage-2 AS mosquitto-downloader
-RUN curl -fsSL -O https://github.com/eclipse/mosquitto/archive/refs/tags/v2.0.20.tar.gz
-RUN mkdir -p /usr/src && tar -C /usr/src -xf v2.0.20.tar.gz
-WORKDIR /usr/src/mosquitto-2.0.20
-ENV CMAKE_ARGS_MOSQUITTO="-DDOCUMENTATION=NO -DWITH_STATIC_LIBRARIES=NO -DWITH_PIC=YES -DWITH_APPS=NO -DWITH_BROKER=NO -DWITH_CLIENTS=NO -DWITH_PLUGINS=NO -DWITH_LIB_CPP=NO"
-# x86_64-linux-gnu
-FROM mosquitto-downloader AS mosquitto-build-amd64
-RUN cmake ${CMAKE_ARGS_AMD64} ${CMAKE_ARGS_MOSQUITTO}
-RUN cmake --build build/
-RUN cmake --install build/
-# aarch64-linux-gnu
-FROM mosquitto-downloader AS mosquitto-build-arm64
-RUN cmake ${CMAKE_ARGS_ARM64} ${CMAKE_ARGS_MOSQUITTO}
-RUN cmake --build build/
-RUN cmake --install build/
-# arm-linux-gnueabihf
-FROM mosquitto-downloader AS mosquitto-build-armhf
-RUN cmake ${CMAKE_ARGS_ARMHF} ${CMAKE_ARGS_MOSQUITTO}
-RUN cmake --build build/
-RUN cmake --install build/
-# install
-FROM stage-1 AS external-mosquitto
-COPY --from=mosquitto-build-amd64 /usr/local/include /usr/local/include
-COPY --from=mosquitto-build-arm64 /usr/local/include /usr/local/include
-COPY --from=mosquitto-build-armhf /usr/local/include /usr/local/include
-COPY --from=mosquitto-build-amd64 /usr/local/lib /usr/local/lib
-COPY --from=mosquitto-build-arm64 /usr/local/lib /usr/local/lib
-COPY --from=mosquitto-build-armhf /usr/local/lib /usr/local/lib
-
 FROM stage-1 AS docker-downloader
 
 RUN curl -fsSL --output - https://download.docker.com/linux/static/stable/x86_64/docker-27.4.1.tgz |\
@@ -500,17 +353,12 @@ RUN mkdir -p ~/.docker/cli-plugins && \
 # Stage 1
 COPY --from=external-asio /usr/local/ /usr/local/
 COPY --from=external-boost /usr/local/ /usr/local/
-COPY --from=external-crow /usr/local/ /usr/local/
 COPY --from=external-googletest /usr/local/ /usr/local/
 COPY --from=external-json /usr/local/ /usr/local/
 COPY --from=external-libusb /usr/local/ /usr/local/
 COPY --from=external-openssl /usr/local/ /usr/local/
 COPY --from=external-yaml-cpp /usr/local/ /usr/local/
 COPY --from=external-zlib /usr/local/ /usr/local/
-# Stage 2
-COPY --from=external-curl /usr/local/ /usr/local/
-COPY --from=external-libarchive /usr/local/ /usr/local/
-COPY --from=external-mosquitto /usr/local/ /usr/local/
 # Run ldconfig
 RUN echo "/lib/x86_64-linux-gnu\n/usr/lib/x86_64-linux-gnu\n/usr/local/lib/x86_64-linux-gnu" >/etc/ld.so.conf.d/x86_64-linux-gnu.conf && ldconfig
 # Docker
