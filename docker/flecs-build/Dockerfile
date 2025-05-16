@@ -22,9 +22,12 @@
 #   - rustup with toolchains for cross-compiling
 FROM debian:bookworm-slim AS stage-1
 
+RUN dpkg --add-architecture arm64
+RUN dpkg --add-architecture armhf
+
 RUN apt-get update && \
     apt-get --yes --no-install-recommends install \
-    ca-certificates curl cmake g++ g++-arm-linux-gnueabihf g++-aarch64-linux-gnu git ninja-build pkg-config && \
+    ca-certificates curl cmake g++ g++-arm-linux-gnueabihf g++-aarch64-linux-gnu git libudev-dev libudev-dev:arm64 libudev-dev:armhf ninja-build pkg-config && \
     apt-get --yes clean && \
     rm -rf /var/lib/apt/lists/*
 
