@@ -23,11 +23,10 @@
 FROM debian:bookworm-slim AS stage-1
 
 RUN dpkg --add-architecture arm64
-RUN dpkg --add-architecture armhf
 
 RUN apt-get update && \
     apt-get --yes --no-install-recommends install \
-    ca-certificates curl cmake g++ g++-arm-linux-gnueabihf g++-aarch64-linux-gnu git libudev-dev libudev-dev:arm64 libudev-dev:armhf ninja-build pkg-config && \
+    ca-certificates curl cmake g++ g++-aarch64-linux-gnu git libudev-dev libudev-dev:arm64 ninja-build pkg-config && \
     apt-get --yes clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -58,19 +57,12 @@ FROM openssl-downloader AS openssl-build-arm64
 RUN ./Configure linux-aarch64 --libdir=lib --cross-compile-prefix=aarch64-linux-gnu- --prefix=/usr/local shared
 RUN make -j16 build_sw && make install_sw
 RUN find /usr/local/ -name "*.a*" -exec rm {} \;
-# arm-linux-gnueabihf
-FROM openssl-downloader AS openssl-build-armhf
-RUN ./Configure linux-armv4 -D__ARM_MAX_ARCH__=7 --libdir=lib --cross-compile-prefix=arm-linux-gnueabihf- --prefix=/usr/local shared
-RUN make -j16 build_sw && make install_sw
-RUN find /usr/local/ -name "*.a*" -exec rm {} \;
 # install
 FROM stage-1 AS external-openssl
 COPY --from=openssl-build-amd64 /usr/local/include /usr/local/include/x86_64-linux-gnu/
 COPY --from=openssl-build-arm64 /usr/local/include /usr/local/include/aarch64-linux-gnu/
-COPY --from=openssl-build-armhf /usr/local/include /usr/local/include/arm-linux-gnueabihf/
 COPY --from=openssl-build-amd64 /usr/local/lib /usr/local/lib/x86_64-linux-gnu/
 COPY --from=openssl-build-arm64 /usr/local/lib /usr/local/lib/aarch64-linux-gnu/
-COPY --from=openssl-build-armhf /usr/local/lib /usr/local/lib/arm-linux-gnueabihf/
 
 FROM stage-1 AS docker-downloader
 
@@ -100,7 +92,6 @@ RUN (curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --p
 ENV PATH="${PATH}:${CARGO_HOME}/bin"
 RUN rustup target add --toolchain ${FLECS_DEFAULT_RUST_TOOLCHAIN} x86_64-unknown-linux-gnu
 RUN rustup target add --toolchain ${FLECS_DEFAULT_RUST_TOOLCHAIN} aarch64-unknown-linux-gnu
-RUN rustup target add --toolchain ${FLECS_DEFAULT_RUST_TOOLCHAIN} armv7-unknown-linux-gnueabihf
 RUN rustup component add clippy
 RUN rustup component add rustfmt
 RUN rustup component add llvm-tools-preview
@@ -117,12 +108,9 @@ COPY --from=docker-downloader /usr/local/bin/docker /usr/local/bin
 # pkg-config variables required by Rust
 ENV PKG_CONFIG_PATH_x86_64_unknown_linux_gnu="/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/share/pkgconfig:/usr/local/lib/x86_64-linux-gnu/pkgconfig"
 ENV PKG_CONFIG_PATH_aarch64_unknown_linux_gnu="/usr/lib/aarch64-linux-gnu/pkgconfig:/usr/share/pkgconfig:/usr/local/lib/aarch64-linux-gnu/pkgconfig"
-ENV PKG_CONFIG_PATH_armv7_unknown_linux_gnueabihf="/usr/lib/arm-linux-gnueabihf/pkgconfig:/usr/share/pkgconfig:/usr/local/lib/arm-linux-gnueabihf/pkgconfig"
 
 ENV PKG_CONFIG_LIBDIR_x86_64_unknown_linux_gnu="/usr/lib/x86_64-linux-gnu"
 ENV PKG_CONFIG_LIBDIR_aarch64_unknown_linux_gnu="/usr/lib/aarch64-linux-gnu"
-ENV PKG_CONFIG_LIBDIR_armv7_unknown_linux_gnueabihf="/usr/lib/arm-linux-gnueabihf"
 
 ENV PKG_CONFIG_SYSROOT_DIR_x86_64_unknown_linux_gnu="/"
 ENV PKG_CONFIG_SYSROOT_DIR_aarch64_unknown_linux_gnu="/"
-ENV PKG_CONFIG_SYSROOT_DIR_armv7_unknown_linux_gnueabihf="/"
