@@ -43,11 +43,11 @@ RUN apt-get update && \
 
 # OpenSSL ----------------------------------------------------------------------
 FROM stage-1-make AS openssl-downloader
-RUN curl -fsSL -O https://www.openssl.org/source/openssl-3.5.0.tar.gz
-RUN curl -fsSL -O https://www.openssl.org/source/openssl-3.5.0.tar.gz.sha256
-RUN echo "$(cat openssl-3.5.0.tar.gz.sha256)" | sha256sum --check --status
-RUN mkdir -p /usr/src && tar -C /usr/src -xf openssl-3.5.0.tar.gz
-WORKDIR /usr/src/openssl-3.5.0
+RUN curl -fsSL -O https://www.openssl.org/source/openssl-3.5.4.tar.gz
+RUN curl -fsSL -O https://www.openssl.org/source/openssl-3.5.4.tar.gz.sha256
+RUN echo "$(cat openssl-3.5.4.tar.gz.sha256)" | sha256sum --check --status
+RUN mkdir -p /usr/src && tar -C /usr/src -xf openssl-3.5.4.tar.gz
+WORKDIR /usr/src/openssl-3.5.4
 # x86_64-linux-gnu
 FROM openssl-downloader AS openssl-build-amd64
 RUN ./Configure linux-x86_64 --libdir=lib --cross-compile-prefix=x86_64-linux-gnu- --prefix=/usr/local shared
@@ -74,7 +74,7 @@ COPY --from=openssl-build-armhf /usr/local/lib /usr/local/lib/arm-linux-gnueabih
 
 FROM stage-1 AS docker-downloader
 
-RUN curl -fsSL --output - https://download.docker.com/linux/static/stable/x86_64/docker-28.1.1.tgz |\
+RUN curl -fsSL --output - https://download.docker.com/linux/static/stable/x86_64/docker-28.5.2.tgz |\
     tar -C /usr/local/bin --strip-components=1 -xzf - docker/docker && \
     chown root:root /usr/local/bin/docker
 
@@ -88,7 +88,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p ~/.docker/cli-plugins && \
-    curl -L -o ~/.docker/cli-plugins/docker-buildx https://github.com/docker/buildx/releases/download/v0.23.0/buildx-v0.23.0.linux-amd64 &&\
+    curl -L -o ~/.docker/cli-plugins/docker-buildx https://github.com/docker/buildx/releases/download/v0.29.1/buildx-v0.29.1.linux-amd64 &&\
     chmod a+x ~/.docker/cli-plugins/docker-buildx
 
 # Rust toolchain
