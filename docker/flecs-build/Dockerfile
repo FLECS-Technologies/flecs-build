@@ -66,7 +66,7 @@ COPY --from=openssl-build-arm64 /usr/local/lib /usr/local/lib/aarch64-linux-gnu/
 
 FROM stage-1 AS docker-downloader
 
-RUN curl -fsSL --output - https://download.docker.com/linux/static/stable/x86_64/docker-28.5.2.tgz |\
+RUN curl -fsSL --output - https://download.docker.com/linux/static/stable/x86_64/docker-29.1.3.tgz |\
     tar -C /usr/local/bin --strip-components=1 -xzf - docker/docker && \
     chown root:root /usr/local/bin/docker
 
@@ -80,7 +80,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p ~/.docker/cli-plugins && \
-    curl -L -o ~/.docker/cli-plugins/docker-buildx https://github.com/docker/buildx/releases/download/v0.29.1/buildx-v0.29.1.linux-amd64 &&\
+    curl -L -o ~/.docker/cli-plugins/docker-buildx https://github.com/docker/buildx/releases/download/v0.30.1/buildx-v0.30.1.linux-amd64 &&\
     chmod a+x ~/.docker/cli-plugins/docker-buildx
 
 # Rust toolchain
