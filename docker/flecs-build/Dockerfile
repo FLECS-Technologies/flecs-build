@@ -95,7 +95,7 @@ RUN rustup target add --toolchain ${FLECS_DEFAULT_RUST_TOOLCHAIN} aarch64-unknow
 RUN rustup component add clippy
 RUN rustup component add rustfmt
 RUN rustup component add llvm-tools-preview
-RUN cargo install --locked cargo-llvm-cov
+RUN cargo install --locked cargo-llvm-cov@0.6.21
 RUN cargo install --locked cargo-auditable
 
 # Stage 1
